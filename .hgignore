@@ -13,7 +13,7 @@ Makefile.in
 syntax: regexp
 \.so\.\d+$
 \.so\.\d+\.\d+\.\d+T?$
-^aclocal\.m4
+^aclocal\.m4$
 ^autom4te\.cache/
 ^build/include/config\.h$
 ^build/include/stamp-h1$
