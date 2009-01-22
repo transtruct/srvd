@@ -1,3 +1,29 @@
+syntax: glob
+*.o
+*.a
+*.so
+*.lo
+*.Plo
+*.la
+*.lai
+Makefile
+Makefile.in
+.dirstamp
+
 syntax: regexp
-^autom4te.cache/
-^configure
+\.so\.\d+$
+\.so\.\d+\.\d+\.\d+T?$
+^aclocal\.m4
+^autom4te\.cache/
+^build/include/config\.h$
+^build/include/stamp-h1$
+^config\.guess$
+^config\.log$
+^config\.status$
+^config\.sub$
+^configure$
+^depcomp$
+^install-sh$
+^libtool$
+^ltmain\.sh$
+^missing$
