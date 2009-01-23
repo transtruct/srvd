@@ -17,6 +17,7 @@ syntax: regexp
 ^autom4te\.cache/
 ^build/include/config\.h$
 ^build/include/stamp-h1$
+^compile$
 ^config\.guess$
 ^config\.log$
 ^config\.status$

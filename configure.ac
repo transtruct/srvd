@@ -19,6 +19,8 @@ AC_CONFIG_HEADER([build/include/config.h])
 AC_PROG_CC
 AC_PROG_LIBTOOL
 
+AM_PROG_CC_C_O
+
 # Checks for libraries.
 
 # Checks for header files.
