@@ -1,4 +1,4 @@
-/* nss.h: Structures for the NSS component of the library.
+/* nssd.h: Structures for the NSS component of the library.
  *
  * This file is part of the nss-daemon NSS backend.
  * Copyright (c) 2008-2009 Transtruct. All rights reserved.
@@ -12,12 +12,12 @@
 
 #include <nss.h>
 
-#define NSSD_NSS_FAIL(status_variable, status, errnov, jump) \
-do {                                                         \
-  (status_variable) = (status);                              \
-  errno = (errnov);                                          \
-  goto jump;                                                 \
- } while(0)
+#define NSSD_NSS_FAIL(status_variable, errno_variable, status, errnov, jump) \
+  do {                                                                  \
+    (status_variable) = (status);                                       \
+    *(errno_variable) = (errnov);                                       \
+    goto jump;                                                          \
+  } while(0)
 
 #define NSSD_NSS_NORECORD(status_variable, jump) \
   do {                                           \

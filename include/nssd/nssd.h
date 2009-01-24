@@ -18,4 +18,6 @@
 #include <unistd.h>
 #include <errno.h>
 
+#define NSSD_UNUSED(x) (void)(x)
+
 #endif

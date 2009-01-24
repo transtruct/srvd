@@ -10,6 +10,7 @@
 #ifndef _NSSD_SERVICE_PASSWD_H
 #define _NSSD_SERVICE_PASSWD_H
 
+#include <nssd/nssd.h>
 #include <nssd/protocol.h>
 
 #define NSSD_SERVICE_PASSWD_REQ_NAME ((nssd_protocol_type_t)701)

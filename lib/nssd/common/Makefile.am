@@ -15,5 +15,9 @@ libnssd_la_LDFLAGS = -version-info $(NSSD_COMMON_API_VERSION)
 
 AUTOMAKE_OPTIONS = subdir-objects
 libnssd_la_SOURCES = \
+	client.c \
+	client/unsock.c \
 	protocol/packet.c \
-	protocol/response.c
+	protocol/response.c \
+	protocol/request.c \
+	protocol/serial_packet.c

@@ -6,7 +6,8 @@
 # This file is released under the terms of the LICENSE document included with
 # this distribution.
 
-NSSD_NSS_API_VERSION = 0:0:0
+# This is 2 for at least all GNU C Library implementations.
+NSSD_NSS_API_VERSION = 2:0:0
 
 lib_LTLIBRARIES = libnss_daemon.la
 

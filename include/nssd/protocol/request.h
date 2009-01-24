@@ -10,6 +10,8 @@
 #ifndef _NSSD_PROTOCOL_REQUEST_H
 #define _NSSD_PROTOCOL_REQUEST_H
 
+#include <nssd/nssd.h>
+#include <nssd/protocol.h>
 #include <nssd/protocol/packet.h>
 #include <nssd/protocol/response.h>
 

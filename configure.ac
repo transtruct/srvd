@@ -25,7 +25,7 @@ AM_PROG_CC_C_O
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h sys/socket.h sys/un.h stdint.h stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

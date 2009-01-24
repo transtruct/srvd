@@ -18,6 +18,8 @@
 
 #include <arpa/inet.h>
 
+#include <stdio.h>
+
 enum nss_status
 _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
                        char *buffer, size_t bufsize, int *ret_errno) {
@@ -25,6 +27,7 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
   nssd_protocol_packet_t packet;
   nssd_protocol_response_t response;
 
+  printf("getpwnam()\n");
   nssd_protocol_packet_initialize(&packet);
   nssd_protocol_packet_fields_initialize(&packet, 1);
 
@@ -40,7 +43,8 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
   nssd_protocol_packet_finalize(&packet);
 
   if(response.status != NSSD_PROTOCOL_RESPONSE_SUCCESS) {
-    NSSD_NSS_FAIL(status, NSS_STATUS_TRYAGAIN, EINVAL, _nss_daemon_getpwnam_r_error);
+    NSSD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
+                  _nss_daemon_getpwnam_r_error);
   }
   else if(response.status == NSSD_PROTOCOL_RESPONSE_NOTFOUND) {
     NSSD_NSS_NORECORD(status, _nss_daemon_getpwnam_r_error);
@@ -53,7 +57,8 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
       switch(response.packet.fields[i].type) {
       case NSSD_SERVICE_PASSWD_RESP_NAME:
         if(!NSSD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, response.packet.fields[i].length)) {
-          NSSD_NSS_FAIL(status, NSS_STATUS_TRYAGAIN, ERANGE, _nss_daemon_getpwnam_r_error);
+          NSSD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
+                        _nss_daemon_getpwnam_r_error);
         }
 
         memcpy(NSSD_BUFFER_REF(bi),
@@ -79,7 +84,8 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
 
       case NSSD_SERVICE_PASSWD_RESP_DIR:
         if(!NSSD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, response.packet.fields[i].length)) {
-          NSSD_NSS_FAIL(status, NSS_STATUS_TRYAGAIN, ERANGE, _nss_daemon_getpwnam_r_error);
+          NSSD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
+                        _nss_daemon_getpwnam_r_error);
         }
 
         memcpy(NSSD_BUFFER_REF(bi),
@@ -91,7 +97,8 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
 
       case NSSD_SERVICE_PASSWD_RESP_SHELL:
         if(!NSSD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, response.packet.fields[i].length)) {
-          NSSD_NSS_FAIL(status, NSS_STATUS_TRYAGAIN, ERANGE, _nss_daemon_getpwnam_r_error);
+          NSSD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
+                        _nss_daemon_getpwnam_r_error);
         }
 
         memcpy(NSSD_BUFFER_REF(bi),
@@ -118,12 +125,14 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
 enum nss_status
 _nss_daemon_getpwuid_r(uid_t uid, struct passwd *pwd,
                        char *buffer, size_t bufsize, int *ret_errno) {
+  printf("getpwuid()\n");
+
   return NSS_STATUS_UNAVAIL;
 }
 
 enum nss_status
 _nss_daemon_setpwent(int stayopen) {
-  (void)stayopen;
+  NSSD_UNUSED(stayopen);
   
   return NSS_STATUS_UNAVAIL;
 }
@@ -137,5 +146,7 @@ _nss_daemon_endpwent(void) {
 enum nss_status
 _nss_daemon_getpwent_r(struct passwd *pwd, char *buffer,
                        size_t bufsize, int *ret_errno) {
+  printf("getpwent()\n");
+
   return NSS_STATUS_UNAVAIL;
 }
