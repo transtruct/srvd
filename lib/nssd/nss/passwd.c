@@ -23,11 +23,10 @@
 enum nss_status
 _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
                        char *buffer, size_t bufsize, int *ret_errno) {
-  enum nss_status status = NSS_STATUS_NOTFOUND;
+  enum nss_status status;
   nssd_protocol_packet_t packet;
   nssd_protocol_response_t response;
 
-  printf("getpwnam()\n");
   nssd_protocol_packet_initialize(&packet);
   nssd_protocol_packet_fields_initialize(&packet, 1);
 
@@ -42,13 +41,18 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
   nssd_protocol_request(&packet, &response);
   nssd_protocol_packet_finalize(&packet);
 
-  if(response.status != NSSD_PROTOCOL_RESPONSE_SUCCESS) {
+  if(response.status == NSSD_PROTOCOL_RESPONSE_NOTFOUND) {
+    NSSD_NSS_NORECORD(status, _nss_daemon_getpwnam_r_error);
+  }
+  else if(response.status == NSSD_PROTOCOL_RESPONSE_UNAVAIL) {
+    NSSD_NSS_UNAVAIL(status, _nss_daemon_getpwnam_r_error);
+  }
+  else if(response.status != NSSD_PROTOCOL_RESPONSE_SUCCESS) {
     NSSD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
                   _nss_daemon_getpwnam_r_error);
   }
-  else if(response.status == NSSD_PROTOCOL_RESPONSE_NOTFOUND) {
-    NSSD_NSS_NORECORD(status, _nss_daemon_getpwnam_r_error);
-  }
+
+  status = NSS_STATUS_SUCCESS;
 
   {
     int i;
@@ -71,14 +75,14 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
       case NSSD_SERVICE_PASSWD_RESP_UID:
         assert(response.packet.fields[i].length == sizeof(uint32_t));
 
-        pwd->pw_uid = (uid_t)ntohl((uint32_t)response.packet.fields[i].data);
+        pwd->pw_uid = (uid_t)ntohl(*(uint32_t *)response.packet.fields[i].data);
 
         break;
 
       case NSSD_SERVICE_PASSWD_RESP_GID:
         assert(response.packet.fields[i].length == sizeof(uint32_t));
 
-        pwd->pw_gid = (gid_t)ntohl((uint32_t)response.packet.fields[i].data);
+        pwd->pw_gid = (gid_t)ntohl(*(uint32_t *)response.packet.fields[i].data);
 
         break;
 
@@ -116,7 +120,6 @@ _nss_daemon_getpwnam_r(const char *name, struct passwd *pwd,
 
  _nss_daemon_getpwnam_r_error:
 
-  nssd_protocol_packet_finalize(&packet);
   nssd_protocol_response_finalize(&response);
 
   return status;

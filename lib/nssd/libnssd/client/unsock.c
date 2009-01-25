@@ -110,7 +110,7 @@ void nssd_client_unsock_read(nssd_client_t *cl, nssd_protocol_packet_t *packet) 
   nssd_protocol_serial_packet_unserialize_header(&serial, packet, header);
 
   char *body = malloc(serial.body_length);
-  assert(read(client->socket, &body, serial.body_length) == serial.body_length);
+  assert(read(client->socket, body, serial.body_length) == serial.body_length);
   nssd_protocol_serial_packet_unserialize_body(&serial, packet, body);
 
   nssd_protocol_serial_packet_finalize(&serial);

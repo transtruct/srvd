@@ -9,7 +9,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(nss-daemon, 0.1.0, nss-daemon@lists.transtruct.org, nss-daemon)
+AC_INIT(nssd, 0.1.0, nssd@lists.transtruct.org, nssd)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 AC_CONFIG_SRCDIR([include/nssd/nssd.h])
@@ -43,7 +43,8 @@ AC_CONFIG_FILES([
         Makefile
         lib/Makefile
         lib/nssd/Makefile
-        lib/nssd/common/Makefile
+        lib/nssd/libnssd/Makefile
+        lib/nssd/libnssd/libnssd.pc
         lib/nssd/nss/Makefile
         include/Makefile
 ])

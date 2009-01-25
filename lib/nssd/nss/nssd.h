@@ -25,4 +25,10 @@
     goto jump;                                   \
   } while(0)
 
+#define NSSD_NSS_UNAVAIL(status_variable, jump) \
+  do {                                          \
+    (status_variable) = NSS_STATUS_UNAVAIL;     \
+    goto jump;                                  \
+  } while(0)
+
 #endif

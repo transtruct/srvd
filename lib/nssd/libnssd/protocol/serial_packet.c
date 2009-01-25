@@ -54,7 +54,7 @@ void nssd_protocol_serial_packet_serialize(nssd_protocol_serial_packet_t *serial
     char *p;
     for(i = 0, p = serial->data + NSSD_PROTOCOL_PACKET_HEADER_SIZE;
         i < packet->field_count;
-        i++, p += packet->fields[i].length + NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE) {
+        p += packet->fields[i].length + NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE, i++) {
       *(uint16_t *)(p + NSSD_PROTOCOL_PACKET_FIELD_HEADER_OFFSET_TYPE) =
         htons((uint16_t)packet->fields[i].type);
       *(uint16_t *)(p + NSSD_PROTOCOL_PACKET_FIELD_HEADER_OFFSET_SIZE) =
@@ -71,27 +71,27 @@ void nssd_protocol_serial_packet_unserialize_header(nssd_protocol_serial_packet_
   assert(header);
 
   /* Make sure the packet version matches. */
-  assert(NSSD_PROTOCOL_PACKET_VERSION_GET(&header) == (uint16_t)NSSD_PROTOCOL_PACKET_VERSION);
+  assert(NSSD_PROTOCOL_PACKET_VERSION_GET(header) == (uint16_t)NSSD_PROTOCOL_PACKET_VERSION);
 
-  nssd_protocol_packet_fields_initialize(packet, NSSD_PROTOCOL_PACKET_COUNT_GET(&header));
+  nssd_protocol_packet_fields_initialize(packet, NSSD_PROTOCOL_PACKET_COUNT_GET(header));
 
-  serial->body_length = NSSD_PROTOCOL_PACKET_SIZE_GET(&header);
+  serial->body_length = NSSD_PROTOCOL_PACKET_SIZE_GET(header);
   serial->length = NSSD_PROTOCOL_PACKET_HEADER_SIZE + serial->body_length;
 }
 
 void nssd_protocol_serial_packet_unserialize_body(nssd_protocol_serial_packet_t *serial, nssd_protocol_packet_t *packet, const char *body) {
   /* Make sure we can legitimately read through this. */
-  assert(serial->body_length > packet->field_count * NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE);
+  assert(serial->body_length >= packet->field_count * NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE);
 
   int i;
   char *p;
   for(i = 0, p = (char *)body;
       i < packet->field_count;
-      p += NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE + packet->fields[i].length) {
+      p += NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE + packet->fields[i].length, i++) {
     packet->fields[i].type = ntohs(*(uint16_t *)(p + NSSD_PROTOCOL_PACKET_FIELD_HEADER_OFFSET_TYPE));
     packet->fields[i].length = ntohs(*(uint16_t *)(p + NSSD_PROTOCOL_PACKET_FIELD_HEADER_OFFSET_SIZE));
     /* Make sure this field header won't make us read out of bounds. */
-    assert((p - body) + packet->fields[i].length < serial->body_length);
+    assert((p + NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE - body) + packet->fields[i].length <= serial->body_length);
     
     nssd_protocol_packet_field_initialize(packet, i);
     memcpy(packet->fields[i].data, (void *)p + NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE, packet->fields[i].length);

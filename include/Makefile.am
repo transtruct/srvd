@@ -16,4 +16,6 @@ nobase_include_HEADERS = \
 	nssd/protocol/request.h \
 	nssd/protocol/response.h \
 	nssd/protocol/serial_packet.h \
+	nssd/server.h \
+	nssd/server/unsock.h \
 	nssd/service/passwd.h

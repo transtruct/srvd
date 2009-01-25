@@ -24,6 +24,7 @@ struct nssd_protocol_response {
 #define NSSD_PROTOCOL_RESPONSE_SUCCESS ((nssd_protocol_response_code_t)0)
 #define NSSD_PROTOCOL_RESPONSE_FAIL ((nssd_protocol_response_code_t)1)
 #define NSSD_PROTOCOL_RESPONSE_NOTFOUND ((nssd_protocol_response_code_t)2)
+#define NSSD_PROTOCOL_RESPONSE_UNAVAIL ((nssd_protocol_response_code_t)3)
 
 #define NSSD_PROTOCOL_RESPONSE_UNKNOWN ((nssd_protocol_response_code_t)65535)
 

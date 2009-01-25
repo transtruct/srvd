@@ -20,4 +20,8 @@
 
 #define NSSD_UNUSED(x) (void)(x)
 
+#define NSSD_BOOLEAN uint8_t
+#define NSSD_TRUE (NSSD_BOOLEAN)1
+#define NSSD_FALSE (NSSD_BOOLEAN)0
+
 #endif
