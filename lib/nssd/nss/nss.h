@@ -7,8 +7,8 @@
  * this distribution.
  */
 
-#ifndef __NSSD_NSS_NSSD_H
-#define __NSSD_NSS_NSSD_H
+#ifndef __NSSD_NSS_NSS_H
+#define __NSSD_NSS_NSS_H
 
 #include <nss.h>
 
