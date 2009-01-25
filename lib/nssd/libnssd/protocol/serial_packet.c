@@ -1,4 +1,4 @@
-/* serial_packet.h: Serialization routines for packets.
+/* serial_packet.c: Serialization routines for packets.
  *
  * This file is part of the nssd NSS backend.
  * Copyright (c) 2008-2009 Transtruct. All rights reserved.

@@ -7,7 +7,7 @@
  * this distribution.
  */
 
-#include "nssd_passwd.h"
+#include "passwd.h"
 
 #include <nssd/nssd.h>
 #include <nssd/buffer.h>

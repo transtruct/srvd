@@ -10,7 +10,7 @@
 #ifndef __NSSD_NSS_PASSWD_H
 #define __NSSD_NSS_PASSWD_H
 
-#include "nssd.h"
+#include "nss.h"
 #include <nssd/nssd.h>
 
 #include <pwd.h>
