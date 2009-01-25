@@ -41,6 +41,7 @@ void nssd_protocol_serial_packet_serialize(nssd_protocol_serial_packet_t *serial
   serial->length = size + NSSD_PROTOCOL_PACKET_HEADER_SIZE;
   serial->body_length = size;
   serial->data = malloc(serial->length);
+  memset(serial->data, 0, serial->length);
 
   /* And copy the data into it. */
   *(uint16_t *)(serial->data + NSSD_PROTOCOL_PACKET_HEADER_OFFSET_VERSION) =
