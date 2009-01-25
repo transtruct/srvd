@@ -1,6 +1,6 @@
 /* buffer.h: Mechanism for handling NSS buffers.
  *
- * This file is part of the nss-daemon NSS backend.
+ * This file is part of the nssd NSS backend.
  * Copyright (c) 2008-2009 Transtruct. All rights reserved.
  *
  * This file is released under the terms of the LICENSE document included with

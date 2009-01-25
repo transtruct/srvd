@@ -1,11 +1,13 @@
 #! /bin/sh
 # autogen.sh: Development script to generate a build system.
 #
-# This file is part of the nss-daemon NSS backend.
+# This file is part of the nssd NSS backend.
 # Copyright (c) 2008-2009 Transtruct. All rights reserved.
 #
 # This file is released under the terms of the LICENSE document included with
 # this distribution.
+
+PROGRAM="nssd"
 
 SCRIPT=$( basename $0 )
 ERROR=0
@@ -34,25 +36,25 @@ die_if_error() {
 }
 
 ( autoconf --version 2>&1 >/dev/null ) || {
-    error "The \`autoconf\` program must be installed to compile nss-daemon."
+    error "The \`autoconf\` program must be installed to compile ${PROGRAM}."
 }
 
 ( automake --version 2>&1 >/dev/null ) || {
-    error "The \`automake\` program must be installed to compile nss-daemon."
+    error "The \`automake\` program must be installed to compile ${PROGRAM}."
 }
 
 ( aclocal --version 2>&1 >/dev/null ) || {
-    error "The \`aclocal\` program must be installed to compile nss-daemon."
+    error "The \`aclocal\` program must be installed to compile ${PROGRAM}."
     hint "\`aclocal\` is usually provided by \`automake\`. Is your version of \`automake\`"
     hint "up to date?"
 }
 
 ( libtool --version 2>&1 >/dev/null ) || {
-    error "The \`libtool\` program must be installed to compile nss-daemon."
+    error "The \`libtool\` program must be installed to compile ${PROGRAM}."
 }
 
 ( libtoolize --version 2>&1 >/dev/null ) || {
-    error "The \`libtoolize\` program must be installed to compile nss-daemon."
+    error "The \`libtoolize\` program must be installed to compile ${PROGRAM}."
     hint "\`libtoolize\` is usually provided by \`libtool\`. Is your version of \`libtool\`"
     hint "up to date?"
 }
