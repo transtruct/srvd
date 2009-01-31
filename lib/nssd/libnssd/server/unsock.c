@@ -114,7 +114,7 @@ void nssd_server_unsock_execute(nssd_server_t *sv) {
 
     /* Okay, let's see if we have a matching handler for the request. */
     nssd_server_service_handler_pt handler = NULL;
-    if(nssd_server_service_get(server, request.fields[0].type, &handler)) {
+    if(nssd_server_service_get(sv, request.fields[0].type, &handler)) {
       handler(&request, &response);
     }
     else {
