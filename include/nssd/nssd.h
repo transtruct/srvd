@@ -20,8 +20,14 @@
 
 #define NSSD_UNUSED(x) (void)(x)
 
-#define NSSD_BOOLEAN uint8_t
-#define NSSD_TRUE (NSSD_BOOLEAN)1
-#define NSSD_FALSE (NSSD_BOOLEAN)0
+typedef uint8_t nssd_boolean_t;
+#define NSSD_TRUE ((nssd_boolean_t)1)
+#define NSSD_FALSE ((nssd_boolean_t)0)
+
+#define _NSSD_JOIN_INTERNAL(x, y) x ## y
+#define NSSD_JOIN(x, y) _NSSD_JOIN_INTERNAL(x, y)
+
+#define _NSSD_STRINGIFY_INTERNAL(x) #x
+#define NSSD_STRINGIFY(x) _NSSD_STRINGIFY_INTERNAL(x)
 
 #endif
