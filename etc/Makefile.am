@@ -6,6 +6,4 @@
 # This file is released under the terms of the LICENSE document included with
 # this distribution.
 
-SUBDIRS = lib include etc
-
-dist_doc_DATA = LICENSE ABOUT
+sysconf_DATA = nssd.conf.example

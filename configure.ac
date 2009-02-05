@@ -47,6 +47,7 @@ AC_CONFIG_FILES([
         lib/nssd/libnssd/libnssd.pc
         lib/nssd/nss/Makefile
         include/Makefile
+        etc/Makefile
 ])
 
 AC_OUTPUT
