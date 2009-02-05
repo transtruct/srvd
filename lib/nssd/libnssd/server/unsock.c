@@ -20,44 +20,44 @@
 #define _SUN_PATH_LENGTH \
   ((size_t)(sizeof(((struct sockaddr_un *)NULL)->sun_path) / sizeof(char)))
 
-#define _CQ 4
-
-nssd_server_t *nssd_server_unsock_allocate(void) {
-  nssd_server_t *server = (nssd_server_t *)malloc(sizeof(nssd_server_unsock_t));
-
-  server->free = nssd_server_unsock_free;
-  server->initialize = nssd_server_unsock_initialize;
-  server->finalize = nssd_server_unsock_finalize;
-  server->execute = nssd_server_unsock_execute;
+nssd_server_unsock_t *nssd_server_unsock_allocate(void) {
+  nssd_server_unsock_t *server = malloc(sizeof(nssd_server_unsock_t));
+  assert(server);
 
   return server;
 }
 
-void nssd_server_unsock_free(nssd_server_t *sv) {
-  nssd_server_unsock_t *server = (nssd_server_unsock_t *)sv;
+void nssd_server_unsock_free(nssd_server_unsock_t *server) {
   assert(server);
 
   free(server);
 }
 
-void nssd_server_unsock_initialize(nssd_server_t *sv) {
-  nssd_server_unsock_t *server = (nssd_server_unsock_t *)sv;
+void nssd_server_unsock_initialize(nssd_server_unsock_t *server, const nssd_server_unsock_conf_t *conf) {
   assert(server);
+  assert(conf);
+  assert(conf->path);
+
+  nssd_server_initialize(&server->monitor);
+
+  /* Copy the configuration. */
+  server->conf = *conf;
 
   /* Set up the address. */
   server->endpoint.sun_family = AF_UNIX;
-  strncpy(server->endpoint.sun_path, "/tmp/nssd.sock", _SUN_PATH_LENGTH);
+  strncpy(server->endpoint.sun_path, server->conf.path, _SUN_PATH_LENGTH);
+  server->endpoint.sun_path[_SUN_PATH_LENGTH - 1] = '\0';
 
   /* Set up the socket. */
   server->socket = socket(PF_UNIX, SOCK_STREAM, 0);
   assert(server->socket != -1);
 }
 
-void nssd_server_unsock_finalize(nssd_server_t *sv) {
-  nssd_server_unsock_t *server = (nssd_server_unsock_t *)sv;
+void nssd_server_unsock_finalize(nssd_server_unsock_t *server) {
   assert(server);
 
-  assert(!server->executing);
+  assert(!server->monitor.executing);
+  nssd_server_finalize(&server->monitor);
 }
 
 static void _nssd_server_unsock_read(int from, nssd_protocol_packet_t *packet) {
@@ -92,13 +92,12 @@ static void _nssd_server_unsock_write(int to, const nssd_protocol_packet_t *pack
   nssd_protocol_serial_packet_finalize(&serial);
 }
 
-void nssd_server_unsock_execute(nssd_server_t *sv) {
-  nssd_server_unsock_t *server = (nssd_server_unsock_t *)sv;
+void nssd_server_unsock_execute(nssd_server_unsock_t *server) {
   assert(server);
 
-  server->executing = NSSD_TRUE;
+  server->monitor.executing = NSSD_TRUE;
   assert(bind(server->socket, (struct sockaddr *)&server->endpoint, sizeof(struct sockaddr_un)) != -1);
-  assert(listen(server->socket, _CQ) != -1);
+  assert(listen(server->socket, server->conf.queue_size) != -1);
 
   for(;;) {
     int client = accept(server->socket, NULL, 0);
@@ -114,7 +113,7 @@ void nssd_server_unsock_execute(nssd_server_t *sv) {
 
     /* Okay, let's see if we have a matching handler for the request. */
     nssd_server_service_handler_pt handler = NULL;
-    if(nssd_server_service_get(sv, request.fields[0].type, &handler)) {
+    if(nssd_server_service_get(&server->monitor, request.fields[0].type, &handler)) {
       handler(&request, &response);
     }
     else {
@@ -135,4 +134,6 @@ void nssd_server_unsock_execute(nssd_server_t *sv) {
 
     close(client);
   }
+
+  server->monitor.executing = NSSD_FALSE;
 }

@@ -31,7 +31,7 @@ void nssd_protocol_request(const nssd_protocol_packet_t *packet, nssd_protocol_r
     return;
   }
 
-  response->status = htons(*(uint16_t *)response->packet.fields[0].data);
+  response->status = NSSD_PROTOCOL_PACKET_FIELD_GET_UINT16(&response->packet, 0);
 
   NSSD_CLIENT_FINALIZE(client);
   NSSD_CLIENT_FREE(client);

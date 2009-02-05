@@ -14,16 +14,10 @@ void nssd_server_initialize(nssd_server_t *server) {
 
   server->executing = NSSD_FALSE;
   server->services = NULL;
-
-  if(server->initialize)
-    server->initialize(server);
 }
 
 void nssd_server_finalize(nssd_server_t *server) {
   assert(server);
-
-  if(server->finalize)
-    server->finalize(server);
 
   server->executing = NSSD_FALSE;
 
@@ -36,7 +30,7 @@ void nssd_server_finalize(nssd_server_t *server) {
   server->services = NULL;
 }
 
-void nssd_server_service_add(nssd_server_t *server, nssd_protocol_type_t type, nssd_server_service_handler_pt handler) {
+nssd_boolean_t nssd_server_service_add(nssd_server_t *server, nssd_protocol_type_t type, nssd_server_service_handler_pt handler) {
   assert(server);
 
   if(!nssd_server_service_has(server, type)) {
@@ -46,13 +40,14 @@ void nssd_server_service_add(nssd_server_t *server, nssd_protocol_type_t type, n
     node->next = server->services;
 
     server->services = node;
+
+    return NSSD_TRUE;
   }
-  else {
-    /* Exception! */
-  }
+  else
+    return NSSD_FALSE;
 }
 
-NSSD_BOOLEAN nssd_server_service_get(nssd_server_t *server, nssd_protocol_type_t type, nssd_server_service_handler_pt *handler) {
+nssd_boolean_t nssd_server_service_get(nssd_server_t *server, nssd_protocol_type_t type, nssd_server_service_handler_pt *handler) {
   assert(server);
   assert(handler);
   
@@ -67,7 +62,7 @@ NSSD_BOOLEAN nssd_server_service_get(nssd_server_t *server, nssd_protocol_type_t
   return NSSD_FALSE;
 }
 
-NSSD_BOOLEAN nssd_server_service_has(nssd_server_t *server, nssd_protocol_type_t type) {
+nssd_boolean_t nssd_server_service_has(nssd_server_t *server, nssd_protocol_type_t type) {
   assert(server);
 
   nssd_server_service_t *i = server->services;
@@ -79,7 +74,7 @@ NSSD_BOOLEAN nssd_server_service_has(nssd_server_t *server, nssd_protocol_type_t
   return NSSD_FALSE;
 }
 
-void nssd_server_service_remove(nssd_server_t *server, nssd_protocol_type_t type) {
+nssd_boolean_t nssd_server_service_remove(nssd_server_t *server, nssd_protocol_type_t type) {
   assert(server);
 
   nssd_server_service_t *pi, *i;
@@ -93,7 +88,9 @@ void nssd_server_service_remove(nssd_server_t *server, nssd_protocol_type_t type
         pi->next = i->next;
 
       free(i);
-      break;
+      return NSSD_TRUE;
     }
   }
+
+  return NSSD_FALSE;
 }

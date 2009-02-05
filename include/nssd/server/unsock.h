@@ -17,17 +17,24 @@
 #include <sys/un.h>
 
 typedef struct nssd_server_unsock nssd_server_unsock_t;
+typedef struct nssd_server_unsock_conf nssd_server_unsock_conf_t;
+
+struct nssd_server_unsock_conf {
+  char *path;
+  size_t queue_size;
+};
 
 struct nssd_server_unsock {
-  NSSD_SERVER_HEADER;
+  nssd_server_t monitor;
+  nssd_server_unsock_conf_t conf;
   struct sockaddr_un endpoint;
   int socket;
 };
 
-nssd_server_t *nssd_server_unsock_allocate(void);
-void nssd_server_unsock_free(nssd_server_t *);
-void nssd_server_unsock_initialize(nssd_server_t *);
-void nssd_server_unsock_finalize(nssd_server_t *sv);
-void nssd_server_unsock_execute(nssd_server_t *sv);
+nssd_server_unsock_t *nssd_server_unsock_allocate(void);
+void nssd_server_unsock_free(nssd_server_unsock_t *);
+void nssd_server_unsock_initialize(nssd_server_unsock_t *, const nssd_server_unsock_conf_t *);
+void nssd_server_unsock_finalize(nssd_server_unsock_t *);
+void nssd_server_unsock_execute(nssd_server_unsock_t *);
 
 #endif

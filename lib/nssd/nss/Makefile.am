@@ -13,7 +13,8 @@ lib_LTLIBRARIES = libnss_daemon.la
 
 libnss_daemon_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/build/include
 libnss_daemon_la_LDFLAGS = -module -version-info $(NSSD_NSS_API_VERSION) \
-	-L$(top_srcdir)/lib/nssd/libnssd -lnssd
+	-L$(top_srcdir)/lib/nssd/libnssd -lnssd \
+	-lpthread
 
 AUTOMAKE_OPTIONS = subdir-objects nostdinc
 libnss_daemon_la_SOURCES = \

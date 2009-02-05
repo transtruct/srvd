@@ -48,7 +48,7 @@ void nssd_client_unsock_initialize(nssd_client_t *cl) {
 
   /* Set up the address. */
   client->endpoint.sun_family = AF_UNIX;
-  strncpy(client->endpoint.sun_path, "/tmp/nssd.sock", _SUN_PATH_LENGTH);
+  strncpy(client->endpoint.sun_path, "/tmp/nssd-sample.sock", _SUN_PATH_LENGTH);
 
   /* Set up the socket. */
   client->socket = socket(PF_UNIX, SOCK_STREAM, 0);
