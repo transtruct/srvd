@@ -10,12 +10,15 @@ NSSD_COMMON_API_VERSION = 0:0:0
 
 lib_LTLIBRARIES = libnssd.la
 
-libnssd_la_CPPFLAGS = -I$(top_srcdir)/include
-libnssd_la_LDFLAGS = -version-info $(NSSD_COMMON_API_VERSION)
+libnssd_la_CPPFLAGS = -I$(top_srcdir)/include -D_NSSD_INPUT_SYSCONFDIR=$(sysconfdir)
+libnssd_la_CFLAGS = -g
+libnssd_la_LDFLAGS = -version-info $(NSSD_COMMON_API_VERSION) \
+	-lpthread
 
 AUTOMAKE_OPTIONS = subdir-objects
 libnssd_la_SOURCES = \
 	client/unsock.c \
+	conf.c \
 	protocol/packet.c \
 	protocol/response.c \
 	protocol/request.c \
