@@ -29,48 +29,60 @@
  * |               .               |
  * |               .               |
  * +-------------------------------+
+ * +-------------------------------+
+ * | type          | size          |
+ * +---------------+---------------+
+ * | data                          |
+ * |               .               |
+ * |               .               |
+ * |               .               |
+ * +-------------------------------+
+ *                 .
+ *                 .
+ *                 .
  */
 
 /* Protocol changes:
  * - 100: Initial version.
  */
-#define NSSD_PROTOCOL_PACKET_VERSION 100
+#define NSSD_PROTOCOL_SERIAL_PACKET_VERSION 100
 
 /* All packets are at least the size of the header, which is 8 bytes. */
-#define NSSD_PROTOCOL_PACKET_HEADER_SIZE 8
+#define NSSD_PROTOCOL_SERIAL_PACKET_HEADER_SIZE 8
 
 /* Additionally, each field has an overhead of 4 bytes. */
-#define NSSD_PROTOCOL_PACKET_FIELD_HEADER_SIZE 4
+#define NSSD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE 4
 
 /* Offsets for reading the structures. */
-#define NSSD_PROTOCOL_PACKET_HEADER_OFFSET_VERSION 0
-#define NSSD_PROTOCOL_PACKET_HEADER_OFFSET_COUNT 2
-#define NSSD_PROTOCOL_PACKET_HEADER_OFFSET_SIZE 4
+#define NSSD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_VERSION 0
+#define NSSD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_COUNT 2
+#define NSSD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_SIZE 4
 
 /* Macros for getting data from the structures. */
-#define NSSD_PROTOCOL_PACKET_VERSION_GET(buffer)                        \
-  (ntohs(*(uint16_t *)((buffer) + NSSD_PROTOCOL_PACKET_HEADER_OFFSET_VERSION)))
-#define NSSD_PROTOCOL_PACKET_COUNT_GET(buffer)                          \
-  (*(uint8_t *)((buffer) + NSSD_PROTOCOL_PACKET_HEADER_OFFSET_COUNT))
-#define NSSD_PROTOCOL_PACKET_SIZE_GET(buffer)                           \
-  (ntohl(*(uint32_t *)((buffer) + NSSD_PROTOCOL_PACKET_HEADER_OFFSET_SIZE)))
+#define NSSD_PROTOCOL_SERIAL_PACKET_VERSION_GET(buffer)                 \
+  (ntohs(*(uint16_t *)((buffer) + NSSD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_VERSION)))
+#define NSSD_PROTOCOL_SERIAL_PACKET_COUNT_GET(buffer)                   \
+  (ntohs(*(uint16_t *)((buffer) + NSSD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_COUNT)))
+#define NSSD_PROTOCOL_SERIAL_PACKET_SIZE_GET(buffer)                    \
+  (ntohl(*(uint32_t *)((buffer) + NSSD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_SIZE)))
 
-#define NSSD_PROTOCOL_PACKET_FIELD_HEADER_OFFSET_TYPE 0
-#define NSSD_PROTOCOL_PACKET_FIELD_HEADER_OFFSET_SIZE 2
+#define NSSD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_TYPE 0
+#define NSSD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_SIZE 2
 
 typedef struct nssd_protocol_serial_packet nssd_protocol_serial_packet_t;
 
 struct nssd_protocol_serial_packet {
-  size_t length, body_length;
+  size_t size, body_size;
+  uint16_t field_count;
   char *data;
 };
 
 nssd_protocol_serial_packet_t *nssd_protocol_serial_packet_allocate(void);
-void nssd_protocol_serial_packet_initialize(nssd_protocol_serial_packet_t *);
-void nssd_protocol_serial_packet_serialize(nssd_protocol_serial_packet_t *, const nssd_protocol_packet_t *);
-void nssd_protocol_serial_packet_unserialize_header(nssd_protocol_serial_packet_t *, nssd_protocol_packet_t *, const char *header);
-void nssd_protocol_serial_packet_unserialize_body(nssd_protocol_serial_packet_t *, nssd_protocol_packet_t *, const char *body);
-void nssd_protocol_serial_packet_finalize(nssd_protocol_serial_packet_t *);
 void nssd_protocol_serial_packet_free(nssd_protocol_serial_packet_t *);
+nssd_boolean_t nssd_protocol_serial_packet_initialize(nssd_protocol_serial_packet_t *);
+nssd_boolean_t nssd_protocol_serial_packet_finalize(nssd_protocol_serial_packet_t *);
+nssd_boolean_t nssd_protocol_serial_packet_serialize(nssd_protocol_serial_packet_t *, const nssd_protocol_packet_t *);
+nssd_boolean_t nssd_protocol_serial_packet_unserialize_header(nssd_protocol_serial_packet_t *, nssd_protocol_packet_t *, char *header);
+nssd_boolean_t nssd_protocol_serial_packet_unserialize_body(nssd_protocol_serial_packet_t *, nssd_protocol_packet_t *, char *body);
 
 #endif

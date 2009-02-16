@@ -34,14 +34,13 @@ struct nssd_conf {
 };
 
 nssd_conf_t *nssd_conf_allocate(void);
-void nssd_conf_initialize(nssd_conf_t *);
-void nssd_conf_finalize(nssd_conf_t *);
 void nssd_conf_free(nssd_conf_t *);
-void nssd_conf_clear(nssd_conf_t *);
+nssd_boolean_t nssd_conf_initialize(nssd_conf_t *);
+nssd_boolean_t nssd_conf_finalize(nssd_conf_t *);
+nssd_boolean_t nssd_conf_clear(nssd_conf_t *);
 nssd_boolean_t nssd_conf_item_add(nssd_conf_t *, const char *, size_t, const char *, size_t);
-nssd_boolean_t nssd_conf_item_has(nssd_conf_t *, const char *);
-nssd_boolean_t nssd_conf_item_get(nssd_conf_t *, const char *, char **, size_t *);
-void nssd_conf_item_free(nssd_conf_t *, char **);
+nssd_boolean_t nssd_conf_item_has(const nssd_conf_t *, const char *);
+nssd_boolean_t nssd_conf_item_get(const nssd_conf_t *, const char *, char **, size_t *);
 
 /* File-based configuration. */
 
@@ -53,9 +52,9 @@ struct nssd_conf_file {
 };
 
 nssd_conf_file_t *nssd_conf_file_allocate(void);
-void nssd_conf_file_initialize(nssd_conf_file_t *, const char *, size_t);
-void nssd_conf_file_finalize(nssd_conf_file_t *);
 void nssd_conf_file_free(nssd_conf_file_t *);
+nssd_boolean_t nssd_conf_file_initialize(nssd_conf_file_t *, const char *, size_t);
+nssd_boolean_t nssd_conf_file_finalize(nssd_conf_file_t *);
 nssd_boolean_t nssd_conf_file_uptodate(nssd_conf_file_t *);
 nssd_boolean_t nssd_conf_file_parse(nssd_conf_file_t *);
 nssd_boolean_t nssd_conf_file_get(nssd_conf_file_t *);

@@ -11,6 +11,7 @@
 #define _NSSD_PROTOCOL_PACKET_H
 
 #include <nssd/nssd.h>
+#include <nssd/thread.h>
 #include <nssd/protocol.h>
 
 #include <arpa/inet.h>
@@ -20,103 +21,144 @@ typedef struct nssd_protocol_packet_field nssd_protocol_packet_field_t;
 
 struct nssd_protocol_packet {
   uint16_t field_count;
-  nssd_protocol_packet_field_t *fields;
+  NSSD_THREAD_MUTEX_DECLARE_UNINITIALIZED(field_lock);
+  nssd_protocol_packet_field_t *field_head, *field_tail;
 };
 
 struct nssd_protocol_packet_field {
   nssd_protocol_type_t type;
-  uint16_t length;
-  nssd_protocol_packet_field_t *next;
+  uint16_t size;
   void *data;
+  nssd_protocol_packet_field_t *next, *previous;
 };
 
+#define NSSD_PROTOCOL_PACKET_FIELD_ITERATE(packet, iterator)    \
+  for((iterator) = (packet)->field_head;                        \
+      (iterator) != NULL;                                       \
+      (iterator) = (iterator)->next)
+
+#define NSSD_PROTOCOL_PACKET_FIELD_ITERATE_COUNT(packet, iterator, counter) \
+  for((iterator) = (packet)->field_head, (counter) = 0;                 \
+      (iterator) != NULL;                                               \
+      (iterator) = (iterator)->next, (counter)++)
+
 nssd_protocol_packet_t *nssd_protocol_packet_allocate(void);
-void nssd_protocol_packet_initialize(nssd_protocol_packet_t *);
-void nssd_protocol_packet_fields_initialize(nssd_protocol_packet_t *, uint8_t);
-void nssd_protocol_packet_field_initialize(nssd_protocol_packet_t *, int);
-void nssd_protocol_packet_field_finalize(nssd_protocol_packet_t *, int);
-void nssd_protocol_packet_finalize(nssd_protocol_packet_t *);
 void nssd_protocol_packet_free(nssd_protocol_packet_t *);
+nssd_boolean_t nssd_protocol_packet_initialize(nssd_protocol_packet_t *);
+nssd_boolean_t nssd_protocol_packet_finalize(nssd_protocol_packet_t *);
 
-static inline size_t nssd_protocol_packet_fields_length(nssd_protocol_packet_t *packet) {
-  assert(packet);
+nssd_boolean_t nssd_protocol_packet_field_add(nssd_protocol_packet_t *, nssd_protocol_type_t,
+                                              uint16_t, const void *);
+nssd_boolean_t nssd_protocol_packet_field_inject(nssd_protocol_packet_t *, nssd_protocol_type_t,
+                                                 uint16_t, const void *);
+nssd_boolean_t nssd_protocol_packet_field_get(const nssd_protocol_packet_t *,
+                                              uint16_t, nssd_protocol_packet_field_t **);
 
-  int i;
-  size_t length;
-  for(i = 0; i < packet->field_count; i++) {
-    length += packet->fields[i].length;
-  }
+static inline
+nssd_boolean_t nssd_protocol_packet_field_get_first(const nssd_protocol_packet_t *packet,
+                                                    nssd_protocol_packet_field_t **field) {
+  NSSD_RETURN_FALSE_UNLESS(packet);
+  NSSD_RETURN_FALSE_UNLESS(field);
+  NSSD_RETURN_FALSE_UNLESS(*field == NULL);
 
-  return length;
+  /* There is no API for removing a field from a packet, so we can safely
+   * assume that if there is a field in the head position, then it's not going
+   * anywhere (unless someone decides to destroy the packet in a different
+   * thread, which would be stupid). */
+  *field = packet->field_head != NULL ? packet->field_head : NULL;
+
+  return *field ? NSSD_TRUE : NSSD_FALSE;
 }
 
-/* Setters */
-#define NSSD_PROTOCOL_PACKET__FIELD_SET_INITIALIZE(packet, field, field_type, value_length) \
-  do { \
-    assert((packet)->field_count > (field));                            \
-                                                                        \
-    (packet)->fields[(field)].type = (field_type);                      \
-    (packet)->fields[(field)].length = (value_length);                  \
-                                                                        \
-    nssd_protocol_packet_field_initialize((packet), (field));           \
-  } while(0)
+static inline
+size_t nssd_protocol_packet_field_size(const nssd_protocol_packet_t *packet) {
+  nssd_protocol_packet_field_t *i;
+  size_t size = 0;
 
-#define NSSD_PROTOCOL_PACKET_FIELD_SET_SCALAR(packet, field, field_type, value_type, value) \
-  do {                                                                  \
-    NSSD_PROTOCOL_PACKET__FIELD_SET_INITIALIZE(packet, field, field_type, sizeof(value_type)); \
-    *(value_type *)(packet)->fields[(field)].data = (value);            \
-  } while(0)
+  NSSD_RETURN_VALUE_UNLESS(packet, 0);
 
-#define NSSD_PROTOCOL_PACKET_FIELD_SET_UINT32(packet, field, field_type, value) \
-  NSSD_PROTOCOL_PACKET_FIELD_SET_SCALAR(packet, field, field_type, uint32_t, htonl(value))
+  NSSD_PROTOCOL_PACKET_FIELD_ITERATE(packet, i)
+    size += i->size;
 
-#define NSSD_PROTOCOL_PACKET_FIELD_SET_UINT16(packet, field, field_type, value) \
-  NSSD_PROTOCOL_PACKET_FIELD_SET_SCALAR(packet, field, field_type, uint16_t, htons(value))
+  return size;
+}
 
-#define NSSD_PROTOCOL_PACKET_FIELD_SET_UINT8(packet, field, field_type, value) \
-  NSSD_PROTOCOL_PACKET_FIELD_SET_SCALAR(packet, field, field_type, uint8_t, value)
+/* Value adders (automatically preserve byte order). */
+static inline
+nssd_boolean_t nssd_protocol_packet_field_add_uint32(nssd_protocol_packet_t *packet,
+                                                     nssd_protocol_type_t type, uint32_t data) {
+  uint32_t v = htonl(data);
+  return nssd_protocol_packet_field_add(packet, type, sizeof(uint32_t), &v);
+}
 
-#define NSSD_PROTOCOL_PACKET_FIELD_SET_ARRAY(packet, field, field_type, value, value_length) \
-  do {                                                                  \
-    NSSD_PROTOCOL_PACKET__FIELD_SET_INITIALIZE(packet, field, field_type, value_length); \
-    memcpy((packet)->fields[(field)].data, (void *)(value), (packet)->fields[(field)].length); \
-  } while(0)
+static inline
+nssd_boolean_t nssd_protocol_packet_field_add_uint16(nssd_protocol_packet_t *packet,
+                                                     nssd_protocol_type_t type, uint16_t data) {
+  uint16_t v = htons(data);
+  return nssd_protocol_packet_field_add(packet, type, sizeof(uint16_t), &v);
+}
 
-#define NSSD_PROTOCOL_PACKET_FIELD_SET_STRING(packet, field, field_type, value, value_length) \
-  do {                                                                  \
-    NSSD_PROTOCOL_PACKET__FIELD_SET_INITIALIZE(packet, field, field_type, value_length); \
-    strncpy((packet)->fields[(field)].data, (char *)(value), (packet)->fields[(field)].length); \
-  } while(0)
+static inline
+nssd_boolean_t nssd_protocol_packet_field_add_uint8(nssd_protocol_packet_t *packet,
+                                                    nssd_protocol_type_t type, uint8_t data) {
+  return nssd_protocol_packet_field_add(packet, type, sizeof(uint8_t), &data);
+}
 
-/* Getters */
+static inline
+nssd_boolean_t nssd_protocol_packet_field_inject_uint32(nssd_protocol_packet_t *packet,
+                                                        nssd_protocol_type_t type, uint32_t data) {
+  uint32_t v = htonl(data);
+  return nssd_protocol_packet_field_inject(packet, type, sizeof(uint32_t), &v);
+}
 
-#define NSSD_PROTOCOL_PACKET__FIELD_GET_INITIALIZE(packet, field)       \
-  assert((packet)->field_count > field)
+static inline
+nssd_boolean_t nssd_protocol_packet_field_inject_uint16(nssd_protocol_packet_t *packet,
+                                                        nssd_protocol_type_t type, uint16_t data) {
+  uint16_t v = htons(data);
+  return nssd_protocol_packet_field_inject(packet, type, sizeof(uint16_t), &v);
+}
 
-#define NSSD_PROTOCOL_PACKET_FIELD_GET_SCALAR(packet, field, value_type) \
-  (*(value_type *)(packet)->fields[(field)].data)
+static inline
+nssd_boolean_t nssd_protocol_packet_field_inject_uint8(nssd_protocol_packet_t *packet,
+                                                       nssd_protocol_type_t type, uint8_t data) {
+  return nssd_protocol_packet_field_inject(packet, type, sizeof(uint8_t), &data);
+}
 
-#define NSSD_PROTOCOL_PACKET_FIELD_GET_UINT32(packet, field)            \
-  ntohl(NSSD_PROTOCOL_PACKET_FIELD_GET_SCALAR(packet, field, uint32_t))
+/* Value getters (automatically preserve byte order). */
+static inline
+nssd_boolean_t nssd_protocol_packet_field_get_uint32(nssd_protocol_packet_field_t *field,
+                                                     uint32_t *data) {
+  NSSD_RETURN_FALSE_UNLESS(field);
+  NSSD_RETURN_FALSE_UNLESS(field->size == sizeof(uint32_t));
+  NSSD_RETURN_FALSE_UNLESS(data);
 
-#define NSSD_PROTOCOL_PACKET_FIELD_GET_UINT16(packet, field)            \
-  ntohs(NSSD_PROTOCOL_PACKET_FIELD_GET_SCALAR(packet, field, uint16_t))
+  *data = ntohl(*(uint32_t *)(field->data));
 
-#define NSSD_PROTOCOL_PACKET_FIELD_GET_UINT8(packet, field)             \
-  NSSD_PROTOCOL_PACKET_FIELD_GET_SCALAR(packet, field, uint8_t)
+  return NSSD_TRUE;
+}
 
-#define NSSD_PROTOCOL_PACKET_FIELD_GET_ARRAY(location, packet, field)   \
-  do {                                                                  \
-    NSSD_PROTOCOL_PACKET__FIELD_GET_INITIALIZE(packet, field);          \
-    memcpy((location),                                                  \
-           (packet)->fields[(field)].data, (packet)->fields[(field)].length); \
-  } while(0)
+static inline
+nssd_boolean_t nssd_protocol_packet_field_get_uint16(nssd_protocol_packet_field_t *field,
+                                                     uint16_t *data) {
+  NSSD_RETURN_FALSE_UNLESS(field);
+  NSSD_RETURN_FALSE_UNLESS(field->size == sizeof(uint16_t));
+  NSSD_RETURN_FALSE_UNLESS(data);
 
-#define NSSD_PROTOCOL_PACKET_FIELD_GET_STRING(location, packet, field)  \
-  do {                                                                  \
-    NSSD_PROTOCOL_PACKET__FIELD_GET_INITIALIZE(packet, field);          \
-    strncpy((char *)(location),                                         \
-            (packet)->fields[(field)].data, (packet)->fields[(field)].length); \
-  } while(0)
+  *data = ntohs(*(uint16_t *)(field->data));
+
+  return NSSD_TRUE;
+}
+
+static inline
+nssd_boolean_t nssd_protocol_packet_field_get_uint8(nssd_protocol_packet_field_t *field,
+                                                    uint8_t *data) {
+  NSSD_RETURN_FALSE_UNLESS(field);
+  NSSD_RETURN_FALSE_UNLESS(field->size == sizeof(uint8_t));
+  NSSD_RETURN_FALSE_UNLESS(data);
+
+  *data = *(uint8_t *)(field->data);
+
+  return NSSD_TRUE;
+}
 
 #endif

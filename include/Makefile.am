@@ -12,10 +12,9 @@ nobase_include_HEADERS = \
 	nssd/client.h \
 	nssd/client/unsock.h \
 	nssd/conf.h \
+	nssd/log.h \
 	nssd/protocol.h \
 	nssd/protocol/packet.h \
-	nssd/protocol/request.h \
-	nssd/protocol/response.h \
 	nssd/protocol/serial_packet.h \
 	nssd/server.h \
 	nssd/server/unsock.h \

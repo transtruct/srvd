@@ -11,20 +11,26 @@ NSSD_COMMON_API_VERSION = 0:0:0
 lib_LTLIBRARIES = libnssd.la
 
 libnssd_la_CPPFLAGS = -I$(top_srcdir)/include -D_NSSD_INPUT_SYSCONFDIR=$(sysconfdir)
-libnssd_la_CFLAGS = -g
+libnssd_la_CFLAGS = \
+	-pthread \
+	-pedantic -std=c99 \
+	-Wall -W -Wcast-qual -Wcast-align -Winline -Wmissing-prototypes -Wwrite-strings \
+	-Wredundant-decls -Wpointer-arith -Wchar-subscripts -Wshadow -Wstrict-prototypes -Werror
 libnssd_la_LDFLAGS = -version-info $(NSSD_COMMON_API_VERSION) \
 	-lpthread
 
 AUTOMAKE_OPTIONS = subdir-objects
 libnssd_la_SOURCES = \
+	client.c \
 	client/unsock.c \
 	conf.c \
+	log.c \
 	protocol/packet.c \
-	protocol/response.c \
-	protocol/request.c \
 	protocol/serial_packet.c \
 	server.c \
-	server/unsock.c
+	server/unsock.c \
+	service.c \
+	service/passwd.c
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libnssd.pc

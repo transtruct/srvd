@@ -26,11 +26,11 @@ struct nssd_client_unsock {
 
 nssd_client_t *nssd_client_unsock_allocate(void);
 void nssd_client_unsock_free(nssd_client_t *);
-void nssd_client_unsock_initialize(nssd_client_t *);
-void nssd_client_unsock_finalize(nssd_client_t *);
-void nssd_client_unsock_connect(nssd_client_t *);
-void nssd_client_unsock_disconnect(nssd_client_t *);
-void nssd_client_unsock_write(nssd_client_t *, const nssd_protocol_packet_t *);
-void nssd_client_unsock_read(nssd_client_t *, nssd_protocol_packet_t *);
+nssd_boolean_t nssd_client_unsock_initialize(nssd_client_t *, const char *);
+nssd_boolean_t nssd_client_unsock_finalize(nssd_client_t *);
+nssd_boolean_t nssd_client_unsock_connect(nssd_client_t *);
+nssd_boolean_t nssd_client_unsock_disconnect(nssd_client_t *);
+nssd_boolean_t nssd_client_unsock_write(nssd_client_t *, const nssd_protocol_packet_t *);
+nssd_boolean_t nssd_client_unsock_read(nssd_client_t *, nssd_protocol_packet_t *);
 
 #endif

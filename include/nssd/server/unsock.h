@@ -33,8 +33,9 @@ struct nssd_server_unsock {
 
 nssd_server_unsock_t *nssd_server_unsock_allocate(void);
 void nssd_server_unsock_free(nssd_server_unsock_t *);
-void nssd_server_unsock_initialize(nssd_server_unsock_t *, const nssd_server_unsock_conf_t *);
-void nssd_server_unsock_finalize(nssd_server_unsock_t *);
-void nssd_server_unsock_execute(nssd_server_unsock_t *);
+nssd_boolean_t nssd_server_unsock_initialize(nssd_server_unsock_t *,
+                                             const nssd_server_unsock_conf_t *);
+nssd_boolean_t nssd_server_unsock_finalize(nssd_server_unsock_t *);
+nssd_boolean_t nssd_server_unsock_execute(nssd_server_unsock_t *);
 
 #endif

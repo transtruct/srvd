@@ -13,7 +13,7 @@
 #include <pthread.h>
 
 #define NSSD_THREAD_KEY_DECLARE(name)           \
-  static pthread_key_t name
+  pthread_key_t (name)
 
 #define NSSD_THREAD_KEY_REFERENCE(name)         \
   (pthread_key_t *)(&(name))
@@ -31,9 +31,27 @@
   pthread_setspecific(name, value)
 
 #define NSSD_THREAD_ONCE_DECLARE(name)                  \
-  static pthread_once_t name = PTHREAD_ONCE_INIT
+  pthread_once_t (name) = PTHREAD_ONCE_INIT
 
 #define NSSD_THREAD_ONCE_CALL(name, callback)   \
   (void)pthread_once(&(name), callback)
+
+#define NSSD_THREAD_MUTEX_DECLARE(name)                         \
+  pthread_mutex_t (name) = PTHREAD_MUTEX_INITIALIZER
+
+#define NSSD_THREAD_MUTEX_DECLARE_UNINITIALIZED(name)   \
+  pthread_mutex_t (name)
+
+#define NSSD_THREAD_MUTEX_INITIALIZE(name)      \
+  (void)pthread_mutex_init(&(name), NULL)
+
+#define NSSD_THREAD_MUTEX_FINALIZE(name)        \
+  (void)pthread_mutex_destroy(&(name))
+
+#define NSSD_THREAD_MUTEX_LOCK(name)            \
+  (void)pthread_mutex_lock(&(name))
+
+#define NSSD_THREAD_MUTEX_UNLOCK(name)          \
+  (void)pthread_mutex_unlock(&(name))
 
 #endif

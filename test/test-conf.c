@@ -49,7 +49,6 @@ int test_conf(void) {
   CHECK(errors, nssd_conf_item_has(&conf.conf, "client:adapter"));
   CHECK(errors, nssd_conf_item_get(&conf.conf, "client:adapter", &adapter, &adapter_length));
   CHECK(errors, adapter_length == strlen("unsock") + 1 && strcmp(adapter, "unsock") == 0);
-  nssd_conf_item_free(&conf.conf, &adapter);
 
   nssd_conf_file_finalize(&conf);
 

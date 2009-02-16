@@ -16,12 +16,18 @@ AC_CONFIG_SRCDIR([include/nssd/nssd.h])
 AC_CONFIG_HEADER([build/include/config.h])
 
 # Checks for programs.
+AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
 AC_PROG_LIBTOOL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
 
 AM_PROG_CC_C_O
 
 # Checks for libraries.
+AC_CHECK_LIB([pthread], [pthread_create])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -29,15 +35,20 @@ AC_CHECK_HEADERS([arpa/inet.h sys/socket.h sys/un.h stdint.h stdlib.h string.h u
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
-AC_TYPE_UID_T
 AC_C_INLINE
+AC_C_RESTRICT
+AC_TYPE_UID_T
 AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_INT32_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
+AC_FUNC_STAT
+AC_CHECK_FUNCS([memset socket])
 
 AC_CONFIG_FILES([
         Makefile

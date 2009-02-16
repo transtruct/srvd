@@ -12,23 +12,17 @@
 
 #include <nssd/nssd.h>
 #include <nssd/protocol.h>
-#include <nssd/protocol/packet.h>
+#include <nssd/service.h>
 
 typedef struct nssd_server nssd_server_t;
 typedef struct nssd_server_service nssd_server_service_t;
-
-typedef nssd_server_t *(*nssd_server_allocate_pt)(void);
-typedef void (*nssd_server_free_pt)(nssd_server_t *);
-typedef void (*nssd_server_initialize_pt)(nssd_server_t *);
-typedef void (*nssd_server_finalize_pt)(nssd_server_t *);
-typedef void (*nssd_server_execute_pt)(nssd_server_t *);
 
 struct nssd_server {
   nssd_server_service_t *services;
   nssd_boolean_t executing;
 };
 
-typedef void (*nssd_server_service_handler_pt)(const nssd_protocol_packet_t *, nssd_protocol_packet_t *);
+typedef void (*nssd_server_service_handler_pt)(const nssd_service_request_t *, nssd_service_response_t *);
 
 struct nssd_server_service {
   nssd_protocol_type_t type;
@@ -36,10 +30,8 @@ struct nssd_server_service {
   nssd_server_service_t *next;
 };
 
-nssd_server_t *nssd_server_allocate(void);
-void nssd_server_initialize(nssd_server_t *);
-void nssd_server_finalize(nssd_server_t *);
-void nssd_server_free(nssd_server_t *);
+nssd_boolean_t nssd_server_initialize(nssd_server_t *);
+nssd_boolean_t nssd_server_finalize(nssd_server_t *);
 
 nssd_boolean_t nssd_server_service_add(nssd_server_t *, nssd_protocol_type_t, nssd_server_service_handler_pt);
 nssd_boolean_t nssd_server_service_get(nssd_server_t *, nssd_protocol_type_t, nssd_server_service_handler_pt *);

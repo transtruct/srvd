@@ -9,15 +9,17 @@
 
 #include <nssd/server.h>
 
-void nssd_server_initialize(nssd_server_t *server) {
-  assert(server);
+nssd_boolean_t nssd_server_initialize(nssd_server_t *server) {
+  NSSD_RETURN_FALSE_UNLESS(server);
 
   server->executing = NSSD_FALSE;
   server->services = NULL;
+
+  return NSSD_TRUE;
 }
 
-void nssd_server_finalize(nssd_server_t *server) {
-  assert(server);
+nssd_boolean_t nssd_server_finalize(nssd_server_t *server) {
+  NSSD_RETURN_FALSE_UNLESS(server);
 
   server->executing = NSSD_FALSE;
 
@@ -28,13 +30,21 @@ void nssd_server_finalize(nssd_server_t *server) {
     free(i);
   }
   server->services = NULL;
+
+  return NSSD_TRUE;
 }
 
-nssd_boolean_t nssd_server_service_add(nssd_server_t *server, nssd_protocol_type_t type, nssd_server_service_handler_pt handler) {
-  assert(server);
+nssd_boolean_t nssd_server_service_add(nssd_server_t *server, nssd_protocol_type_t type,
+                                       nssd_server_service_handler_pt handler) {
+  NSSD_RETURN_FALSE_UNLESS(server);
 
   if(!nssd_server_service_has(server, type)) {
     nssd_server_service_t *node = malloc(sizeof(nssd_server_service_t));
+    if(node == NULL) {
+      NSSD_LOG_ERROR("nssd_server_service_add: Unable to allocate memory for node");
+      return NSSD_FALSE;
+    }
+
     node->type = type;
     node->handler = handler;
     node->next = server->services;
@@ -48,9 +58,9 @@ nssd_boolean_t nssd_server_service_add(nssd_server_t *server, nssd_protocol_type
 }
 
 nssd_boolean_t nssd_server_service_get(nssd_server_t *server, nssd_protocol_type_t type, nssd_server_service_handler_pt *handler) {
-  assert(server);
-  assert(handler);
-  
+  NSSD_RETURN_FALSE_UNLESS(server);
+  NSSD_RETURN_FALSE_UNLESS(handler);
+
   nssd_server_service_t *i = server->services;
   for(; i != NULL; i = i->next) {
     if(i->type == type) {
@@ -63,7 +73,7 @@ nssd_boolean_t nssd_server_service_get(nssd_server_t *server, nssd_protocol_type
 }
 
 nssd_boolean_t nssd_server_service_has(nssd_server_t *server, nssd_protocol_type_t type) {
-  assert(server);
+  NSSD_RETURN_FALSE_UNLESS(server);
 
   nssd_server_service_t *i = server->services;
   for(; i != NULL; i = i->next) {
@@ -75,7 +85,7 @@ nssd_boolean_t nssd_server_service_has(nssd_server_t *server, nssd_protocol_type
 }
 
 nssd_boolean_t nssd_server_service_remove(nssd_server_t *server, nssd_protocol_type_t type) {
-  assert(server);
+  NSSD_RETURN_FALSE_UNLESS(server);
 
   nssd_server_service_t *pi, *i;
   for(pi = NULL, i = server->services;

@@ -19,10 +19,10 @@
   (iterator)
 
 #define NSSD_BUFFER_CHECK_OFFSET(iterator, buffer, buffer_size, length) \
-  ((iterator) + (length) - (buffer) <= (buffer_size))
+  ((size_t)((iterator) - (buffer)) + (length) <= (buffer_size))
 
 #define NSSD_BUFFER_CHECK(iterator, buffer, buffer_size) \
-  ((iterator) - (buffer) <= (buffer_size))
+  ((size_t)((iterator) - (buffer)) <= (buffer_size))
 
 #define NSSD_BUFFER_ITERATOR_NEXT(iterator, length) \
   (iterator) += (length)

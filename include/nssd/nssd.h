@@ -10,7 +10,6 @@
 #ifndef _NSSD_NSSD_H
 #define _NSSD_NSSD_H
 
-#include <assert.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -24,10 +23,40 @@ typedef uint8_t nssd_boolean_t;
 #define NSSD_TRUE ((nssd_boolean_t)1)
 #define NSSD_FALSE ((nssd_boolean_t)0)
 
-#define _NSSD_JOIN_INTERNAL(x, y) x ## y
-#define NSSD_JOIN(x, y) _NSSD_JOIN_INTERNAL(x, y)
+#define NSSD__JOIN(x, y) x ## y
+#define NSSD_JOIN(x, y) NSSD__JOIN(x, y)
 
-#define _NSSD_STRINGIFY_INTERNAL(x) #x
-#define NSSD_STRINGIFY(x) _NSSD_STRINGIFY_INTERNAL(x)
+#define NSSD__STRINGIFY(x) #x
+#define NSSD_STRINGIFY(x) NSSD__STRINGIFY(x)
+
+#define NSSD_RETURN_IF(condition)              \
+  do {                                         \
+    if(condition)                              \
+      return;                                  \
+  } while(0)
+#define NSSD_RETURN_VALUE_IF(condition, value) \
+  do {                                         \
+    if(condition)                              \
+      return (value);                          \
+  } while(0)
+#define NSSD_RETURN_NULL_IF(condition)          \
+  NSSD_RETURN_VALUE_IF(condition, NULL)
+#define NSSD_RETURN_FALSE_IF(condition)         \
+  NSSD_RETURN_VALUE_IF(condition, NSSD_FALSE)
+#define NSSD_RETURN_TRUE_IF(condition)          \
+  NSSD_RETURN_VALUE_IF(condition, NSSD_TRUE)
+
+#define NSSD_RETURN_UNLESS(condition)           \
+  NSSD_RETURN_IF(!(condition))
+#define NSSD_RETURN_VALUE_UNLESS(condition, value)      \
+  NSSD_RETURN_VALUE_IF(!(condition), value)
+#define NSSD_RETURN_NULL_UNLESS(condition)      \
+  NSSD_RETURN_NULL_IF(!(condition))
+#define NSSD_RETURN_FALSE_UNLESS(condition)     \
+  NSSD_RETURN_FALSE_IF(!(condition))
+#define NSSD_RETURN_TRUE_UNLESS(condition)      \
+  NSSD_RETURN_TRUE_IF(!(condition))
+
+#include <nssd/log.h>
 
 #endif
