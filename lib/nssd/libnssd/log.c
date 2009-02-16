@@ -1,4 +1,4 @@
-/* log.h: Logging routines.
+/* log.c: Logging routines.
  *
  * This file is part of the nssd NSS backend.
  * Copyright (c) 2008-2009 Transtruct. All rights reserved.
