@@ -27,7 +27,8 @@ AC_PROG_MAKE_SET
 AM_PROG_CC_C_O
 
 # Checks for libraries.
-AC_CHECK_LIB([pthread], [pthread_create])
+m4_include([build/acx_pthread.m4])
+ACX_PTHREAD
 
 # Checks for header files.
 AC_HEADER_STDC

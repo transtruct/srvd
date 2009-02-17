@@ -9,17 +9,19 @@
 # This is 2 for at least all GNU C Library implementations.
 NSSD_NSS_API_VERSION = 2:0:0
 
+CC = $(PTHREAD_CC)
+
 lib_LTLIBRARIES = libnss_daemon.la
 
 libnss_daemon_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/build/include
 libnss_daemon_la_CFLAGS = \
-	-pthread \
 	-pedantic -std=c99 \
 	-Wall -W -Wcast-qual -Wcast-align -Winline -Wmissing-prototypes -Wwrite-strings \
-	-Wredundant-decls -Wpointer-arith -Wchar-subscripts -Wshadow -Wstrict-prototypes -Werror
+	-Wredundant-decls -Wpointer-arith -Wchar-subscripts -Wshadow -Wstrict-prototypes -Werror \
+	$(PTHREAD_CFLAGS)
 libnss_daemon_la_LDFLAGS = -module -version-info $(NSSD_NSS_API_VERSION) \
 	-L$(top_srcdir)/lib/nssd/libnssd -lnssd \
-	-lpthread
+	$(PTHREAD_LIBS)
 
 AUTOMAKE_OPTIONS = subdir-objects nostdinc
 libnss_daemon_la_SOURCES = \
