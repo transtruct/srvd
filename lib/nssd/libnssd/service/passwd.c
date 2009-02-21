@@ -120,3 +120,12 @@ nssd_boolean_t nssd_service_passwd_response_shell_set(nssd_service_response_t *r
   return nssd_protocol_packet_field_add(&response->packet, NSSD_SERVICE_PASSWD_RESPONSE_SHELL,
                                         length, shell);
 }
+
+nssd_boolean_t nssd_service_passwd_response_gecos_set(nssd_service_response_t *response,
+                                                      const char *gecos, size_t length) {
+  NSSD_RETURN_FALSE_UNLESS(response);
+  NSSD_RETURN_FALSE_UNLESS(gecos);
+
+  return nssd_protocol_packet_field_add(&response->packet, NSSD_SERVICE_PASSWD_RESPONSE_GECOS,
+                                        length, gecos);
+}

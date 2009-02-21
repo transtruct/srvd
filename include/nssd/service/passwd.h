@@ -28,6 +28,7 @@ nssd_boolean_t nssd_service_passwd_request_entities_get(const nssd_service_reque
 #define NSSD_SERVICE_PASSWD_RESPONSE_GID ((nssd_protocol_type_t)753)
 #define NSSD_SERVICE_PASSWD_RESPONSE_DIR ((nssd_protocol_type_t)754)
 #define NSSD_SERVICE_PASSWD_RESPONSE_SHELL ((nssd_protocol_type_t)755)
+#define NSSD_SERVICE_PASSWD_RESPONSE_GECOS ((nssd_protocol_type_t)756)
 
 nssd_boolean_t nssd_service_passwd_response_name_set(nssd_service_response_t *,
                                                      const char *, size_t);
@@ -36,6 +37,8 @@ nssd_boolean_t nssd_service_passwd_response_gid_set(nssd_service_response_t *, g
 nssd_boolean_t nssd_service_passwd_response_dir_set(nssd_service_response_t *,
                                                     const char *, size_t);
 nssd_boolean_t nssd_service_passwd_response_shell_set(nssd_service_response_t *,
+                                                      const char *, size_t);
+nssd_boolean_t nssd_service_passwd_response_gecos_set(nssd_service_response_t *,
                                                       const char *, size_t);
 
 #endif

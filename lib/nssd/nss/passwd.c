@@ -73,6 +73,20 @@ static enum nss_status _nssd_nss_passwd_callback(const nssd_service_response_t *
       NSSD_BUFFER_ITERATOR_NEXT(bi, field->size);
       break;
 
+#ifdef HAVE_PASSWD_GECOS
+    case NSSD_SERVICE_PASSWD_RESPONSE_GECOS:
+      if(!NSSD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, field->size)) {
+        NSSD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
+                      _nssd_nss_passwd_callback_error);
+      }
+
+      strncpy(NSSD_BUFFER_REF(bi), field->data, field->size);
+      NSSD_BUFFER_REF(bi)[field->size - 1] = '\0';
+      pwd->pw_gecos = NSSD_BUFFER_REF(bi);
+
+      NSSD_BUFFER_ITERATOR_NEXT(bi, field->size);
+#endif
+
     default:
       break;
     }

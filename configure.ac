@@ -34,6 +34,9 @@ ACX_PTHREAD
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h sys/socket.h sys/un.h stdint.h stdlib.h string.h unistd.h])
 
+m4_include([build/nssd_passwd.m4])
+NSSD_PASSWD
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE

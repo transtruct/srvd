@@ -10,6 +10,9 @@
 #ifndef __NSSD_NSS_NSS_H
 #define __NSSD_NSS_NSS_H
 
+/* In build/include. */
+#include "config.h"
+
 #include <nss.h>
 
 #define NSSD_NSS_FAIL(status_variable, errno_variable, status, errnov, jump) \

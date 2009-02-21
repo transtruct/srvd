@@ -19,6 +19,9 @@
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
 
+/* Define to 1 if your `struct passwd' has a pw_gecos field. */
+#undef HAVE_PASSWD_GECOS
+
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
