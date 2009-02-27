@@ -6,4 +6,4 @@
 # This file is released under the terms of the LICENSE document included with
 # this distribution.
 
-SUBDIRS = srvd
+SUBDIRS = libsrvd nss pam

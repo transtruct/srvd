@@ -1,0 +1,26 @@
+# This is an example srvd.conf for the srvd service daemon. You should modify
+# it to suit your environment.
+
+# client:adapter: The method by which the library connects to the running
+# backend server.
+#
+# Possibilities are `unsock' for UNIX domain sockets and `tcp' for TCP sockets.
+client:adapter = unsock
+
+# client:path: For the `unsock' adapter, this specifies the path to the domain
+# socket.
+client:path = "/var/run/srvd-sample.sock"
+
+# client:family: For the `tcp' adapter, this specifies whether IPv4 or IPv6
+# should be used for the connection.
+#
+# Possibilities include `inet' for IPv4 and `inet6' for IPv6.
+#client:family = inet
+
+# client:host: For the `tcp' adapter, this specifies the hostname of the remote
+# machine to which the client should connect.
+#client:host = 127.0.0.1
+
+# client:port: For the `tcp' adapter, this specifies the port to which the
+# client should connect.
+#client:port = 8642

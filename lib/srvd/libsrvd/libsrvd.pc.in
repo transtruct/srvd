@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+includedir=@includedir@
+libdir=@libdir@
+
+Name: @PACKAGE_NAME@
+Description: Common libraries for srvd, a service daemon for POSIX-compliant systems
+Version: @PACKAGE_VERSION@
+URL: http://srvd.transtruct.org/
+Libs: -L${libdir} -lsrvd
+Cflags: -I${includedir}

@@ -14,7 +14,7 @@ Makefile.in
 syntax: regexp
 \.so\.\d+$
 \.so\.\d+\.\d+\.\d+T?$
-^lib/nssd/libnssd/libnssd\.pc$
+^lib/srvd/libsrvd/libsrvd\.pc$
 ^aclocal\.m4$
 ^autom4te\.cache/
 ^build/include/config\.h$

@@ -1,5 +1,8 @@
 /* build/include/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to 1 if you have support for the aliases database. */
+#undef HAVE_ALIASES
+
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
 
