@@ -17,7 +17,8 @@ typedef uint16_t srvd_protocol_type_t;
 /* No protocol is being used. */
 #define SRVD_PROTOCOL_NONE ((srvd_protocol_type_t)0)
 
-/* Reserved for internal use. */
+/* Field types greater than 65239 are reserved for necessary srvd
+ * communication. */
 #define SRVD_PROTOCOL_STATUS ((srvd_protocol_type_t)65535)
 
 /* Additional protocol types are defined in the files in the `service'
