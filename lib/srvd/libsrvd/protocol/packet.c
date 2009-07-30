@@ -53,12 +53,10 @@ srvd_boolean_t srvd_protocol_packet_finalize(srvd_protocol_packet_t *packet) {
   return SRVD_TRUE;
 }
 
-srvd_boolean_t srvd_protocol_packet_field_add(srvd_protocol_packet_t *packet,
-                                              srvd_protocol_packet_field_t *field) {
-  SRVD_RETURN_FALSE_UNLESS(packet);
-  SRVD_RETURN_FALSE_UNLESS(field);
-
-  SRVD_THREAD_MUTEX_LOCK(packet->field_lock);
+/* These methods must be called with packet->field_lock locked! */
+static inline
+void _srvd_protocol_packet_field_add_locked(srvd_protocol_packet_t *packet,
+                                            srvd_protocol_packet_field_t *field) {
   if(packet->field_head == NULL)
     packet->field_head = field;
 
@@ -69,6 +67,30 @@ srvd_boolean_t srvd_protocol_packet_field_add(srvd_protocol_packet_t *packet,
   packet->field_tail = field;
 
   packet->field_count++;
+}
+
+static inline
+void _srvd_protocol_packet_field_inject_locked(srvd_protocol_packet_t *packet,
+                                               srvd_protocol_packet_field_t *field) {
+  if(packet->field_tail == NULL)
+    packet->field_tail = field;
+
+  field->next = packet->field_head;
+  if(field->next)
+    field->next->previous = field;
+
+  packet->field_head = field;
+
+  packet->field_count++;
+}
+
+srvd_boolean_t srvd_protocol_packet_field_add(srvd_protocol_packet_t *packet,
+                                              srvd_protocol_packet_field_t *field) {
+  SRVD_RETURN_FALSE_UNLESS(packet);
+  SRVD_RETURN_FALSE_UNLESS(field);
+
+  SRVD_THREAD_MUTEX_LOCK(packet->field_lock);
+  _srvd_protocol_packet_field_add_locked(packet, field);
   SRVD_THREAD_MUTEX_UNLOCK(packet->field_lock);
 
   return SRVD_TRUE;
@@ -80,16 +102,7 @@ srvd_boolean_t srvd_protocol_packet_field_inject(srvd_protocol_packet_t *packet,
   SRVD_RETURN_FALSE_UNLESS(field);
 
   SRVD_THREAD_MUTEX_LOCK(packet->field_lock);
-  if(packet->field_tail == NULL)
-    packet->field_tail = field;
-
-  field->next = packet->field_head;
-  if(field->next)
-    field->next->previous = field;
-
-  packet->field_head = field;
-
-  packet->field_count++;
+  _srvd_protocol_packet_field_inject_locked(packet, field);
   SRVD_THREAD_MUTEX_UNLOCK(packet->field_lock);
 
   return SRVD_TRUE;  
@@ -147,8 +160,6 @@ srvd_boolean_t srvd_protocol_packet_field_get_or_add(srvd_protocol_packet_t *pac
   SRVD_RETURN_FALSE_UNLESS(field);
   SRVD_RETURN_FALSE_UNLESS(*field == NULL);
 
-  /* Some thread might call this function and then call it again in another thread, resulting
-   * in an unfortunate error. Lock for good measure. */
   SRVD_THREAD_MUTEX_LOCK(packet->field_lock);
   if(!srvd_protocol_packet_field_get_by_type(packet, type, field)) {
     *field = srvd_protocol_packet_field_allocate();
@@ -165,13 +176,7 @@ srvd_boolean_t srvd_protocol_packet_field_get_or_add(srvd_protocol_packet_t *pac
       goto _srvd_protocol_packet_field_get_or_add_error;
     }
 
-    if(!srvd_protocol_packet_field_add(packet, *field)) {
-      SRVD_LOG_ERROR("srvd_protocol_packet_field_get_or_add: Unable to add field to packet");
-      srvd_protocol_packet_field_finalize(*field);
-      srvd_protocol_packet_field_free(*field);
-      *field = NULL;
-      goto _srvd_protocol_packet_field_get_or_add_error;
-    }
+    _srvd_protocol_packet_field_add_locked(packet, *field);
   }
 
   status = SRVD_TRUE;
@@ -192,8 +197,6 @@ srvd_boolean_t srvd_protocol_packet_field_get_or_inject(srvd_protocol_packet_t *
   SRVD_RETURN_FALSE_UNLESS(field);
   SRVD_RETURN_FALSE_UNLESS(*field == NULL);
 
-  /* Some thread might call this function and then call it again in another thread, resulting
-   * in an unfortunate error. Lock for good measure. */
   SRVD_THREAD_MUTEX_LOCK(packet->field_lock);
   if(!srvd_protocol_packet_field_get_by_type(packet, type, field)) {
     *field = srvd_protocol_packet_field_allocate();
@@ -210,13 +213,7 @@ srvd_boolean_t srvd_protocol_packet_field_get_or_inject(srvd_protocol_packet_t *
       goto _srvd_protocol_packet_field_get_or_inject_error;
     }
 
-    if(!srvd_protocol_packet_field_inject(packet, *field)) {
-      SRVD_LOG_ERROR("srvd_protocol_packet_field_get_or_inject: Unable to add field to packet");
-      srvd_protocol_packet_field_finalize(*field);
-      srvd_protocol_packet_field_free(*field);
-      *field = NULL;
-      goto _srvd_protocol_packet_field_get_or_inject_error;
-    }
+    _srvd_protocol_packet_field_inject_locked(packet, *field);
   }
 
   status = SRVD_TRUE;
@@ -231,73 +228,87 @@ srvd_boolean_t srvd_protocol_packet_field_get_or_inject(srvd_protocol_packet_t *
 srvd_boolean_t srvd_protocol_packet_field_append(srvd_protocol_packet_t *packet,
                                                  srvd_protocol_type_t type, uint16_t size,
                                                  const void *data) {
+  srvd_boolean_t status = SRVD_FALSE;
   srvd_protocol_packet_field_t *field = NULL;
 
   SRVD_RETURN_FALSE_UNLESS(packet);
 
+  SRVD_THREAD_MUTEX_LOCK(packet->field_lock);
   if(srvd_protocol_packet_field_get_by_type(packet, type, &field)) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_append: Field with type %d already exists", type);
-    return SRVD_FALSE;
+    goto _srvd_protocol_packet_field_append_error;
   }
 
   field = srvd_protocol_packet_field_allocate();
   if(field == NULL) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_append: Unable to allocate memory for field");
-    return SRVD_FALSE;
+    goto _srvd_protocol_packet_field_append_error;
   }
 
   if(!srvd_protocol_packet_field_initialize(field, type)) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_append: Unable to initialize field");
-    return SRVD_FALSE;
+    srvd_protocol_packet_field_free(field);
+    goto _srvd_protocol_packet_field_append_error;
   }
 
   if(!srvd_protocol_packet_field_entry_add(field, size, data)) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_append: Unable to add entry to field");
-    return SRVD_FALSE;
+    srvd_protocol_packet_field_finalize(field);
+    srvd_protocol_packet_field_free(field);
+    goto _srvd_protocol_packet_field_append_error;
   }
 
-  if(!srvd_protocol_packet_field_add(packet, field)) {
-    SRVD_LOG_ERROR("srvd_protocol_packet_field_append: Unable to add field to packet");
-    return SRVD_FALSE;
-  }
+  _srvd_protocol_packet_field_add_locked(packet, field);
+  status = SRVD_TRUE;
 
-  return SRVD_TRUE;
+ _srvd_protocol_packet_field_append_error:
+
+  SRVD_THREAD_MUTEX_UNLOCK(packet->field_lock);
+
+  return status;
 }
 
 srvd_boolean_t srvd_protocol_packet_field_insert(srvd_protocol_packet_t *packet,
                                                  srvd_protocol_type_t type, uint16_t size,
                                                  const void *data) {
+  srvd_boolean_t status = SRVD_FALSE;
   srvd_protocol_packet_field_t *field = NULL;
 
   SRVD_RETURN_FALSE_UNLESS(packet);
 
+  SRVD_THREAD_MUTEX_LOCK(packet->field_lock);
   if(srvd_protocol_packet_field_get_by_type(packet, type, &field)) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_insert: Field with type %d already exists", type);
-    return SRVD_FALSE;
+    goto _srvd_protocol_packet_field_insert_error;
   }
 
   field = srvd_protocol_packet_field_allocate();
   if(field == NULL) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_insert: Unable to allocate memory for field");
-    return SRVD_FALSE;
+    goto _srvd_protocol_packet_field_insert_error;
   }
 
   if(!srvd_protocol_packet_field_initialize(field, type)) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_insert: Unable to initialize field");
-    return SRVD_FALSE;
+    srvd_protocol_packet_field_free(field);
+    goto _srvd_protocol_packet_field_insert_error;
   }
 
   if(!srvd_protocol_packet_field_entry_add(field, size, data)) {
     SRVD_LOG_ERROR("srvd_protocol_packet_field_insert: Unable to add entry to field");
-    return SRVD_FALSE;
+    srvd_protocol_packet_field_finalize(field);
+    srvd_protocol_packet_field_free(field);
+    goto _srvd_protocol_packet_field_insert_error;
   }
 
-  if(!srvd_protocol_packet_field_inject(packet, field)) {
-    SRVD_LOG_ERROR("srvd_protocol_packet_field_insert: Unable to add field to packet");
-    return SRVD_FALSE;
-  }
+  _srvd_protocol_packet_field_inject_locked(packet, field);
+  status = SRVD_TRUE;
 
-  return SRVD_TRUE;
+ _srvd_protocol_packet_field_insert_error:
+
+  SRVD_THREAD_MUTEX_UNLOCK(packet->field_lock);
+
+  return status;
 }
 
 srvd_protocol_packet_field_t *srvd_protocol_packet_field_allocate(void) {

@@ -20,10 +20,11 @@ static enum nss_status _srvd_nss_passwd_populate(const srvd_service_response_t *
                                                  struct passwd *pwd, char *buffer, size_t bufsize, int *ret_errno) {
   enum nss_status status = NSS_STATUS_SUCCESS;
   srvd_protocol_packet_field_t *field;
-  srvd_protocol_packet_field_entry_t *entry = NULL;
   SRVD_BUFFER(bi, buffer);
 
   SRVD_SERVICE_RESPONSE_FIELD_ITERATE(response, field) {
+    srvd_protocol_packet_field_entry_t *entry = NULL;
+
     switch(field->type) {
     case SRVD_SERVICE_NSS_PASSWD_RESPONSE_NAME:
       if(!srvd_protocol_packet_field_entry_get_first(field, &entry)) {
@@ -114,6 +115,7 @@ static enum nss_status _srvd_nss_passwd_populate(const srvd_service_response_t *
       pwd->pw_gecos = SRVD_BUFFER_REF(bi);
 
       SRVD_BUFFER_ITERATOR_NEXT(bi, entry->size);
+      break;
 #endif
 
     default:
