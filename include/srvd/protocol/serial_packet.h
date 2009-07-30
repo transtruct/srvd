@@ -16,24 +16,23 @@
 /* Packet format:
  *
  * 0       8       16      24      32
- * +-------------------------------+
+ * +---------------+---------------+
  * | version       | field count   | <-- Header
  * +---------------+---------------+
  * | size                          |
  * +-------------------------------+
- * +-------------------------------+
- * | type          | size          | <-- Fields
  * +---------------+---------------+
- * | data                          |
- * |               .               |
- * |               .               |
- * |               .               |
- * +-------------------------------+
- * +-------------------------------+
- * | type          | size          |
+ * | type          | entry count   | <-- Fields
  * +---------------+---------------+
- * | data                          |
+ * +---------------+---------------+
+ * | size          | data          | <-- Entry
+ * +---------------+               |
  * |               .               |
+ * |               .               |
+ * +-------------------------------+
+ * +---------------+---------------+
+ * | size          | data          | <-- Entry
+ * +---------------+               |
  * |               .               |
  * |               .               |
  * +-------------------------------+
@@ -43,9 +42,10 @@
  */
 
 /* Protocol changes:
+ * - 110: Support multiple entries per field.
  * - 100: Initial version.
  */
-#define SRVD_PROTOCOL_SERIAL_PACKET_VERSION 100
+#define SRVD_PROTOCOL_SERIAL_PACKET_VERSION 110
 
 /* All packets are at least the size of the header, which is 8 bytes. */
 #define SRVD_PROTOCOL_SERIAL_PACKET_HEADER_SIZE 8
@@ -53,12 +53,15 @@
 /* Additionally, each field has an overhead of 4 bytes. */
 #define SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE 4
 
+/* And each field entry has an overhead of 2 bytes. */
+#define SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_SIZE 2
+
 /* Offsets for reading the structures. */
 #define SRVD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_VERSION 0
 #define SRVD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_COUNT 2
 #define SRVD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_SIZE 4
 
-/* Macros for getting data from the structures. */
+/* Macros for getting and setting data from the structures. */
 #define SRVD_PROTOCOL_SERIAL_PACKET_VERSION_GET(buffer)                 \
   (ntohs(*(uint16_t *)((buffer) + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_VERSION)))
 #define SRVD_PROTOCOL_SERIAL_PACKET_COUNT_GET(buffer)                   \
@@ -67,7 +70,9 @@
   (ntohl(*(uint32_t *)((buffer) + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_SIZE)))
 
 #define SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_TYPE 0
-#define SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_SIZE 2
+#define SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_COUNT 2
+
+#define SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_OFFSET_SIZE 0
 
 typedef struct srvd_protocol_serial_packet srvd_protocol_serial_packet_t;
 

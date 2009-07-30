@@ -23,66 +23,99 @@ static enum nss_status _srvd_nss_passwd_populate(const srvd_service_response_t *
   SRVD_BUFFER(bi, buffer);
 
   SRVD_SERVICE_RESPONSE_FIELD_ITERATE(response, field) {
+    srvd_protocol_packet_field_entry_t *entry = NULL;
+
     switch(field->type) {
     case SRVD_SERVICE_NSS_PASSWD_RESPONSE_NAME:
-      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, field->size)) {
+      if(!srvd_protocol_packet_field_entry_get_first(field, &entry)) {
+        SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
+                      _srvd_nss_passwd_populate_error);
+      }
+
+      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, entry->size)) {
         SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
                       _srvd_nss_passwd_populate_error);
       }
 
-      strncpy(SRVD_BUFFER_REF(bi), field->data, field->size);
-      SRVD_BUFFER_REF(bi)[field->size - 1] = '\0';
+      strncpy(SRVD_BUFFER_REF(bi), entry->data, entry->size);
+      SRVD_BUFFER_REF(bi)[entry->size - 1] = '\0';
       pwd->pw_name = SRVD_BUFFER_REF(bi);
 
-      SRVD_BUFFER_ITERATOR_NEXT(bi, field->size);
+      SRVD_BUFFER_ITERATOR_NEXT(bi, entry->size);
       break;
 
     case SRVD_SERVICE_NSS_PASSWD_RESPONSE_UID:
-      srvd_protocol_packet_field_get_uint32(field, &pwd->pw_uid);
+      if(!srvd_protocol_packet_field_entry_get_first(field, &entry)) {
+        SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
+                      _srvd_nss_passwd_populate_error);
+      }
+
+      srvd_protocol_packet_field_entry_get_uint32(entry, &pwd->pw_uid);
       break;
 
     case SRVD_SERVICE_NSS_PASSWD_RESPONSE_GID:
-      srvd_protocol_packet_field_get_uint32(field, &pwd->pw_gid);
+      if(!srvd_protocol_packet_field_entry_get_first(field, &entry)) {
+        SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
+                      _srvd_nss_passwd_populate_error);
+      }
+
+      srvd_protocol_packet_field_entry_get_uint32(entry, &pwd->pw_gid);
       break;
 
     case SRVD_SERVICE_NSS_PASSWD_RESPONSE_DIR:
-      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, field->size)) {
+      if(!srvd_protocol_packet_field_entry_get_first(field, &entry)) {
+        SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
+                      _srvd_nss_passwd_populate_error);
+      }
+
+      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, entry->size)) {
         SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
                       _srvd_nss_passwd_populate_error);
       }
 
-      strncpy(SRVD_BUFFER_REF(bi), field->data, field->size);
-      SRVD_BUFFER_REF(bi)[field->size - 1] = '\0';
+      strncpy(SRVD_BUFFER_REF(bi), entry->data, entry->size);
+      SRVD_BUFFER_REF(bi)[entry->size - 1] = '\0';
       pwd->pw_dir = SRVD_BUFFER_REF(bi);
 
-      SRVD_BUFFER_ITERATOR_NEXT(bi, field->size);
+      SRVD_BUFFER_ITERATOR_NEXT(bi, entry->size);
       break;
 
     case SRVD_SERVICE_NSS_PASSWD_RESPONSE_SHELL:
-      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, field->size)) {
+      if(!srvd_protocol_packet_field_entry_get_first(field, &entry)) {
+        SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
+                      _srvd_nss_passwd_populate_error);
+      }
+
+      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, entry->size)) {
         SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
                       _srvd_nss_passwd_populate_error);
       }
 
-      strncpy(SRVD_BUFFER_REF(bi), field->data, field->size);
-      SRVD_BUFFER_REF(bi)[field->size - 1] = '\0';
+      strncpy(SRVD_BUFFER_REF(bi), entry->data, entry->size);
+      SRVD_BUFFER_REF(bi)[entry->size - 1] = '\0';
       pwd->pw_shell = SRVD_BUFFER_REF(bi);
 
-      SRVD_BUFFER_ITERATOR_NEXT(bi, field->size);
+      SRVD_BUFFER_ITERATOR_NEXT(bi, entry->size);
       break;
 
 #ifdef HAVE_PASSWD_GECOS
     case SRVD_SERVICE_NSS_PASSWD_RESPONSE_GECOS:
-      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, field->size)) {
+      if(!srvd_protocol_packet_field_entry_get_first(field, &entry)) {
+        SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, EINVAL,
+                      _srvd_nss_passwd_populate_error);
+      }
+
+      if(!SRVD_BUFFER_CHECK_OFFSET(bi, buffer, bufsize, entry->size)) {
         SRVD_NSS_FAIL(status, ret_errno, NSS_STATUS_TRYAGAIN, ERANGE,
                       _srvd_nss_passwd_populate_error);
       }
 
-      strncpy(SRVD_BUFFER_REF(bi), field->data, field->size);
-      SRVD_BUFFER_REF(bi)[field->size - 1] = '\0';
+      strncpy(SRVD_BUFFER_REF(bi), entry->data, entry->size);
+      SRVD_BUFFER_REF(bi)[entry->size - 1] = '\0';
       pwd->pw_gecos = SRVD_BUFFER_REF(bi);
 
-      SRVD_BUFFER_ITERATOR_NEXT(bi, field->size);
+      SRVD_BUFFER_ITERATOR_NEXT(bi, entry->size);
+      break;
 #endif
 
     default:
@@ -103,8 +136,8 @@ _nss_srvd_getpwnam_r(const char *name, struct passwd *pwd,
   srvd_service_response_t response;
 
   srvd_service_request_initialize(&request);
-  srvd_protocol_packet_field_add(&request.packet, SRVD_SERVICE_NSS_PASSWD_REQUEST_NAME,
-                                 (uint16_t)(sysconf(_SC_LOGIN_NAME_MAX) + 1), name);
+  srvd_protocol_packet_field_append(&request.packet, SRVD_SERVICE_NSS_PASSWD_REQUEST_NAME,
+                                    (uint16_t)(sysconf(_SC_LOGIN_NAME_MAX) + 1), name);
 
   srvd_service_response_initialize(&response);
   srvd_service_request_query(&request, &response);
@@ -138,7 +171,8 @@ _nss_srvd_getpwuid_r(uid_t uid, struct passwd *pwd,
   srvd_service_response_t response;
 
   srvd_service_request_initialize(&request);
-  srvd_protocol_packet_field_add_uint32(&request.packet, SRVD_SERVICE_NSS_PASSWD_REQUEST_UID, uid);
+  srvd_protocol_packet_field_append_uint32(&request.packet, SRVD_SERVICE_NSS_PASSWD_REQUEST_UID,
+                                           uid);
 
   srvd_service_response_initialize(&response);
   srvd_service_request_query(&request, &response);
@@ -235,8 +269,8 @@ _nss_srvd_getpwent_r(struct passwd *pwd, char *buffer,
   offset = (uint32_t *)SRVD_THREAD_KEY_DATA_GET(_srvd_nss_passwd_pwent_offset);
 
   srvd_service_request_initialize(&request);
-  srvd_protocol_packet_field_add_uint32(&request.packet, SRVD_SERVICE_NSS_PASSWD_REQUEST_ENTITIES,
-                                        *offset);
+  srvd_protocol_packet_field_append_uint32(&request.packet,
+                                           SRVD_SERVICE_NSS_PASSWD_REQUEST_ENTITIES, *offset);
 
   srvd_service_response_initialize(&response);
   srvd_service_request_query(&request, &response);
