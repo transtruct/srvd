@@ -7,6 +7,7 @@ syntax: glob
 *.Plo
 *.la
 *.lai
+*.Tpo
 Makefile
 Makefile.in
 .dirstamp
