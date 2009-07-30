@@ -43,25 +43,39 @@ srvd_boolean_t srvd_protocol_serial_packet_initialize(srvd_protocol_serial_packe
   return SRVD_TRUE;
 }
 
+static inline size_t _srvd_protocol_serial_packet_body_size(const srvd_protocol_packet_t *packet) {
+  size_t size = SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE * packet->field_count;
+  srvd_protocol_packet_field_t *field;
+
+  SRVD_PROTOCOL_PACKET_FIELD_ITERATE(packet, field) {
+    srvd_protocol_packet_field_entry_t *entry;
+
+    size += SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_SIZE * field->entry_count;
+    SRVD_PROTOCOL_PACKET_FIELD_ENTRY_ITERATE(field, entry)
+      size += entry->size;
+  }
+
+  return size;
+}
+
 srvd_boolean_t srvd_protocol_serial_packet_serialize(srvd_protocol_serial_packet_t *serial,
                                                      const srvd_protocol_packet_t *packet) {
-  srvd_protocol_packet_field_t *i;
+  srvd_protocol_packet_field_t *field;
   char *p;
-  size_t size;
+  size_t body_size;
 
   SRVD_RETURN_FALSE_UNLESS(serial);
   SRVD_RETURN_FALSE_UNLESS(packet);
 
   /* How big do we need the packet to be? */
-  size = (SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE * packet->field_count) +
-    srvd_protocol_packet_field_size(packet);
+  body_size = _srvd_protocol_serial_packet_body_size(packet);
 
   /* Just for reference... */
   serial->field_count = packet->field_count;
 
   /* Okay, now allocate it. */
-  serial->size = size + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_SIZE;
-  serial->body_size = size;
+  serial->size = body_size + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_SIZE;
+  serial->body_size = body_size;
   serial->data = malloc(serial->size);
   if(serial->data == NULL) {
     SRVD_LOG_ERROR("srvd_protocol_serial_packet_serialize: Unable to allocate memory for "
@@ -77,18 +91,33 @@ srvd_boolean_t srvd_protocol_serial_packet_serialize(srvd_protocol_serial_packet
   *(uint16_t *)(serial->data + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_COUNT) =
     htons((uint16_t)packet->field_count);
   *(uint32_t *)(serial->data + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_OFFSET_SIZE) =
-    htonl((uint32_t)size);
+    htonl((uint32_t)serial->body_size);
 
-  for(i = packet->field_head, p = serial->data + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_SIZE;
-      i != NULL;
-      p += i->size + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE, i = i->next) {
+  for(field = packet->field_head, p = serial->data + SRVD_PROTOCOL_SERIAL_PACKET_HEADER_SIZE;
+      field != NULL;
+      field = field->next) {
+    srvd_protocol_packet_field_entry_t *entry;
+
+    /* Headers. */
     *(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_TYPE) =
-      htons((uint16_t)i->type);
-    *(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_SIZE) =
-      htons((uint16_t)i->size);
+      htons((uint16_t)field->type);
+    *(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_COUNT) =
+      htons((uint16_t)field->entry_count);
 
-    /* The real data! */
-    memcpy(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE, i->data, i->size);
+    p += SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE;
+
+    for(entry = field->entry_head;
+        entry != NULL;
+        p += entry->size, entry = entry->next) {
+      /* Headers. */
+      *(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_OFFSET_SIZE) =
+        htons((uint16_t)entry->size);
+
+      p += SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_SIZE;
+
+      /* The real data! */
+      memcpy(p, entry->data, entry->size);
+    }
   }
 
   return SRVD_TRUE;
@@ -120,6 +149,7 @@ srvd_boolean_t srvd_protocol_serial_packet_unserialize_body(srvd_protocol_serial
                                                             srvd_protocol_packet_t *packet,
                                                             char *body) {
   char *p;
+  uint16_t i;
 
   /* Make sure we can legitimately read through this. */
   if(serial->body_size < (size_t)(serial->field_count * SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE)) {
@@ -129,26 +159,58 @@ srvd_boolean_t srvd_protocol_serial_packet_unserialize_body(srvd_protocol_serial
   }
 
   p = body;
-  while((size_t)(p - body) < serial->body_size) {
-    srvd_protocol_type_t type = (srvd_protocol_type_t)ntohs(*(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_TYPE));
-    uint16_t size = ntohs(*(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_SIZE));
+  for(i = 0; i < serial->field_count; i++) {
+    uint16_t entry, entry_count;
+    srvd_protocol_packet_field_t *field = NULL;
+    srvd_protocol_type_t type;
 
-    /* Make sure this field header won't make us read out of bounds. */
-    if((size_t)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE - body) + size > serial->body_size) {
-      SRVD_LOG_ERROR("srvd_protocol_serial_packet_unserialize_body: Error: Buffer overrun while "
-                     "reading packet field");
+    if((size_t)(p - body) >= serial->body_size) {
+      SRVD_LOG_ERROR("srvd_protocol_serial_packet_unserialize_body: Reading after end of valid data");
       return SRVD_FALSE;
     }
 
-    void *data = (void *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE);
+    type = (srvd_protocol_type_t)ntohs(*(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_TYPE));
+    entry_count = ntohs(*(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_OFFSET_COUNT));
 
-    if(!srvd_protocol_packet_field_add(packet, type, size, data)) {
-      SRVD_LOG_ERROR("srvd_protocol_serial_packet_unserialize_body: Error: Could not initialize "
-                     "packet field");
+    /* We need to be able to read at least through the entry headers as well. */
+    if((size_t)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE - body) +
+       (entry_count * SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_SIZE) > serial->body_size) {
+      SRVD_LOG_ERROR("srvd_protocol_serial_packet_unserialize_body: Error: Field entry header "
+                     "size is larger than total body size");
       return SRVD_FALSE;
     }
 
-    p += SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE + size;
+    if(!srvd_protocol_packet_field_get_or_add(packet, type, &field)) {
+      SRVD_LOG_ERROR("srvd_protocol_serial_packet_unserialize_body: Unable to get field instance");
+      return SRVD_FALSE;
+    }
+
+    p += SRVD_PROTOCOL_SERIAL_PACKET_FIELD_HEADER_SIZE;
+
+    for(entry = 0; entry < entry_count; entry++) {
+      uint16_t size = ntohs(*(uint16_t *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_OFFSET_SIZE));
+
+      /* Make sure this entry header won't make us read out of bounds. */
+      if((size_t)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_SIZE - body) + size > serial->body_size) {
+        SRVD_LOG_ERROR("srvd_protocol_serial_packet_unserialize_body: Error: Buffer overrun while "
+                       "reading packet field entry");
+        srvd_protocol_packet_field_finalize(field);
+        srvd_protocol_packet_field_free(field);
+        return SRVD_FALSE;
+      }
+
+      void *data = (void *)(p + SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_SIZE);
+
+      if(!srvd_protocol_packet_field_entry_add(field, size, data)) {
+        SRVD_LOG_ERROR("srvd_protocol_serial_packet_unserialize_body: Error: Could not initialize "
+                       "packet field");
+        srvd_protocol_packet_field_finalize(field);
+        srvd_protocol_packet_field_free(field);
+        return SRVD_FALSE;
+      }
+
+      p += SRVD_PROTOCOL_SERIAL_PACKET_FIELD_ENTRY_HEADER_SIZE + size;
+    }
   }
 
   return SRVD_TRUE;

@@ -216,12 +216,12 @@ srvd_boolean_t srvd_server_unsock_execute(srvd_server_unsock_t *server) {
       handler(&request, &response);
 
       /* Get the response status and inject it into the list of fields. */
-      srvd_protocol_packet_field_inject_uint16(&response.packet, SRVD_PROTOCOL_STATUS,
+      srvd_protocol_packet_field_insert_uint16(&response.packet, SRVD_PROTOCOL_STATUS,
                                                response.status);
     }
     else
       /* Nope -- unavailable. */
-      srvd_protocol_packet_field_inject_uint16(&response.packet, SRVD_PROTOCOL_STATUS,
+      srvd_protocol_packet_field_insert_uint16(&response.packet, SRVD_PROTOCOL_STATUS,
                                                SRVD_SERVICE_RESPONSE_UNAVAIL);
 
     if(!_srvd_server_unsock_write(client, &response.packet)) {

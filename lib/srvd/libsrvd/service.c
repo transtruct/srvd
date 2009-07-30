@@ -53,6 +53,7 @@ srvd_boolean_t srvd_service_request_query(const srvd_service_request_t *request,
   srvd_conf_file_t *fconf = NULL;
   srvd_client_t *client = NULL;
   srvd_protocol_packet_field_t *status_field = NULL;
+  srvd_protocol_packet_field_entry_t *status_entry = NULL;
 
   SRVD_RETURN_FALSE_UNLESS(request);
   SRVD_RETURN_FALSE_UNLESS(response);
@@ -96,11 +97,12 @@ srvd_boolean_t srvd_service_request_query(const srvd_service_request_t *request,
   /* Assuming response->packet is initialized, the field_count is either updated
    * by the query or is 0 (its initialization value), so this comparison is
    * in fact safe even if an error occurred. */
-  if(!srvd_protocol_packet_field_get_first(&response->packet, &status_field)) {
+  if(!srvd_protocol_packet_field_get_first(&response->packet, &status_field) ||
+     !srvd_protocol_packet_field_entry_get_first(status_field, &status_entry)) {
     response->status = SRVD_SERVICE_RESPONSE_FAIL;
   }
   else {
-    srvd_protocol_packet_field_get_uint16(status_field, &response->status);
+    srvd_protocol_packet_field_entry_get_uint16(status_entry, &response->status);
   }
 
   if(client)
