@@ -93,8 +93,8 @@ srvd_boolean_t srvd_service_nss_aliases_response_member_add(srvd_service_respons
   SRVD_RETURN_FALSE_UNLESS(response);
   SRVD_RETURN_FALSE_UNLESS(member);
 
-  if(!srvd_protocol_packet_field_get_or_create(&response->packet,
-                                               SRVD_SERVICE_NSS_ALIASES_RESPONSE_MEMBER, &field)) {
+  if(!srvd_protocol_packet_field_get_or_add(&response->packet,
+                                            SRVD_SERVICE_NSS_ALIASES_RESPONSE_MEMBER, &field)) {
     SRVD_LOG_ERROR("srvd_service_nss_aliases_response_member_add: Unable to get field instance");
     return SRVD_FALSE;
   }

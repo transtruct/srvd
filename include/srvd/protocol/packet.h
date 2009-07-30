@@ -75,7 +75,10 @@ srvd_boolean_t srvd_protocol_packet_field_get_by_type(const srvd_protocol_packet
                                                       srvd_protocol_type_t,
                                                       srvd_protocol_packet_field_t **);
 
-srvd_boolean_t srvd_protocol_packet_field_get_or_create(srvd_protocol_packet_t *,
+srvd_boolean_t srvd_protocol_packet_field_get_or_add(srvd_protocol_packet_t *,
+                                                     srvd_protocol_type_t,
+                                                     srvd_protocol_packet_field_t **);
+srvd_boolean_t srvd_protocol_packet_field_get_or_inject(srvd_protocol_packet_t *,
                                                         srvd_protocol_type_t,
                                                         srvd_protocol_packet_field_t **);
 
