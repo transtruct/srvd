@@ -35,32 +35,32 @@ die_if_error() {
     fi
 }
 
-( autoconf --version 2>&1 >/dev/null ) || {
+( autoconf --version >/dev/null 2>&1 ) || {
     error "The \`autoconf\` program must be installed to compile ${PROGRAM}."
 }
 
-( automake --version 2>&1 >/dev/null ) || {
+( automake --version >/dev/null 2>&1 ) || {
     error "The \`automake\` program must be installed to compile ${PROGRAM}."
 }
 
-( aclocal --version 2>&1 >/dev/null ) || {
+( aclocal --version >/dev/null 2>&1 ) || {
     error "The \`aclocal\` program must be installed to compile ${PROGRAM}."
     hint "\`aclocal\` is usually provided by \`automake\`. Is your version of \`automake\`"
     hint "up to date?"
 }
 
-( libtool --version 2>&1 >/dev/null ) || {
+( libtool --version >/dev/null 2>&1 ) || {
     error "The \`libtool\` program must be installed to compile ${PROGRAM}."
 }
 
-( libtoolize --version 2>&1 >/dev/null ) || {
+( libtoolize --version >/dev/null 2>&1 ) || {
     error "The \`libtoolize\` program must be installed to compile ${PROGRAM}."
     hint "\`libtoolize\` is usually provided by \`libtool\`. Is your version of \`libtool\`"
     hint "up to date?"
 }
 
-( pkg-config --version 2>&1 >/dev/null ) || {
-    error "The \'pkg-config\' program must be installed to compile ${PROGRAM}."
+( pkg-config --version >/dev/null 2>&1 ) || {
+    error "The \`pkg-config\` program must be installed to compile ${PROGRAM}."
 }
 
 die_if_error
