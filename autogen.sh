@@ -59,6 +59,10 @@ die_if_error() {
     hint "up to date?"
 }
 
+( pkg-config --version 2>&1 >/dev/null ) || {
+    error "The \'pkg-config\' program must be installed to compile ${PROGRAM}."
+}
+
 die_if_error
 
 status "Running libtoolize"
