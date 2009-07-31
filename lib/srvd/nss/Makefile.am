@@ -25,4 +25,5 @@ libnss_srvd_la_LDFLAGS = -module -version-info $(SRVD_NSS_API_VERSION) \
 
 AUTOMAKE_OPTIONS = subdir-objects nostdinc
 libnss_srvd_la_SOURCES = \
+	aliases.c \
 	passwd.c

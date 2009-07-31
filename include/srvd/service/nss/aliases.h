@@ -25,7 +25,7 @@ srvd_boolean_t srvd_service_nss_aliases_request_entities_get(const srvd_service_
                                                              int32_t *);
 
 #define SRVD_SERVICE_NSS_ALIASES_RESPONSE_NAME ((srvd_protocol_type_t)151)
-#define SRVD_SERVICE_NSS_ALIASES_RESPONSE_MEMBER ((srvd_protocol_type_t)152)
+#define SRVD_SERVICE_NSS_ALIASES_RESPONSE_MEMBERS ((srvd_protocol_type_t)152)
 #define SRVD_SERVICE_NSS_ALIASES_RESPONSE_LOCAL ((srvd_protocol_type_t)153)
 
 srvd_boolean_t srvd_service_nss_aliases_response_name_set(srvd_service_response_t *,
